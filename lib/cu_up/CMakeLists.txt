@@ -31,6 +31,15 @@ set(SOURCES
         routines/cu_up_test_mode_routines.cpp
 )
 
+# plain ip plain_ip plainip
+# Add the plain IP adapter library
+add_library(srsran_cu_up_plain_ip STATIC
+    adapters/plain_ip_adapter.cpp)
+
+target_link_libraries(srsran_cu_up_plain_ip
+    srslog
+    srsran_support)
+
 add_library(srsran_cu_up STATIC ${SOURCES})
 target_link_libraries(srsran_cu_up
         srsran_e1ap_common
@@ -49,3 +58,11 @@ add_library(srsran_o_cu_up STATIC
         o_cu_up_factory.cpp
         o_cu_up_impl.cpp)
 target_link_libraries(srsran_o_cu_up PRIVATE srsran_cu_up srsran_e2)
+
+# plain ip plain_ip plainip
+# Then add plain_ip to srsran_cu_up dependencies
+target_link_libraries(srsran_cu_up
+    # ... your existing dependencies ...
+    srsran_cu_up_plain_ip
+)
+

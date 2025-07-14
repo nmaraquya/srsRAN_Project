@@ -104,6 +104,7 @@ struct worker_manager_config {
     bool dedicated_io_ul_strand = true;
     /// Whether to enable task tracing.
     bool executor_tracing_enable = false;
+  
   };
 
   /// PCAP worker configuration.

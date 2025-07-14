@@ -21,6 +21,7 @@
  */
 
 #pragma once
+#include "adapters/plain_ip_adapter.h"
 
 #include "adapters/e1ap_adapters.h"
 #include "adapters/gtpu_adapters.h"
@@ -98,6 +99,9 @@ private:
   fifo_async_task_scheduler main_ctrl_loop;
 
   unique_timer statistics_report_timer;
+  
+  std::unique_ptr<plain_ip_adapter> plain_ip;
+
 };
 
 } // namespace srsran::srs_cu_up

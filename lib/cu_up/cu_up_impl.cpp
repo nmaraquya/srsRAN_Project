@@ -29,6 +29,7 @@
 #include "srsran/gtpu/gtpu_echo_factory.h"
 #include "srsran/gtpu/gtpu_teid_pool_factory.h"
 #include "srsran/support/executors/execute_until_success.h"
+
 #include <future>
 
 using namespace srsran;
@@ -106,6 +107,16 @@ cu_up::cu_up(const cu_up_config& config_, const cu_up_dependencies& dependencies
 
   // Connect GTP-U DEMUX to adapter.
   gw_data_gtpu_demux_adapter.connect_gtpu_demux(*ngu_demux);
+  
+// plain ip plain_ip plainip
+if (cfg.use_plain_ip) {
+  plain_ip = std::make_unique<srs_cu_up::plain_ip_adapter>();
+  if (!plain_ip->init()) {
+    report_error("Failed to initialize plain IP adapter");
+  }
+  logger.info("Plain IP adapter initialized successfully");
+}
+
 
   // Establish new NG-U session and connect the instantiated session to the GTP-U DEMUX adapter, so that the latter
   // is called when new NG-U DL PDUs are received.
@@ -207,6 +218,10 @@ void cu_up::stop()
   std::unique_lock<std::mutex> lock(mutex);
   if (not running) {
     return;
+  }
+
+  if (plain_ip) {
+    plain_ip->stop();
   }
 
   logger.debug("CU-UP stopping...");

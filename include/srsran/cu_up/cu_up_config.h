@@ -88,6 +88,8 @@ struct cu_up_config {
   std::string plmn = "00101";
   /// CU-UP statistics report period in seconds.
   std::chrono::seconds statistics_report_period;
+  bool use_plain_ip = false;  // Flag to enable/disable plain IP adapter
+
 };
 
 /// CU-UP dependencies.
