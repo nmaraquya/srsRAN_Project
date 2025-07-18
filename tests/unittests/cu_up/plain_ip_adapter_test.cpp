@@ -1,18 +1,34 @@
 #include <gtest/gtest.h>
 #include "../../../lib/cu_up/adapters/plain_ip_adapter.h"
-#include "srsran/support/executors/manual_task_executor.h"
+#include "srsran/support/executors/task_executor.h"
 #include "srsran/srslog/srslog.h"
 
 using namespace srsran;
 using namespace srs_cu_up;
+
+// Simple mock executor for testing
+class mock_task_executor : public task_executor {
+public:
+  bool execute(unique_task task) override {
+    // Just execute the task immediately
+    task();
+    return true;
+  }
+  
+  bool defer(unique_task task) override {
+    // Just execute the task immediately
+    task();
+    return true;
+  }
+};
 
 class PlainIPAdapterTest : public ::testing::Test {
 protected:
   void SetUp() override {
     srslog::init();
     
-    // Create a manual task executor for testing
-    executor = std::make_unique<manual_task_executor>();
+    // Create a mock task executor
+    executor = std::make_unique<mock_task_executor>();
     
     // Create plain IP configuration
     config.interface_name = "test_tun0";
@@ -30,7 +46,7 @@ protected:
     srslog::flush();
   }
   
-  std::unique_ptr<manual_task_executor> executor;
+  std::unique_ptr<mock_task_executor> executor;
   plain_ip_config config;
   std::unique_ptr<plain_ip_adapter> adapter;
 };
@@ -47,6 +63,7 @@ TEST_F(PlainIPAdapterTest, InitTest) {
   // For now, just test that init doesn't crash
   bool result = adapter->init();
   // We don't assert on the result because it depends on system privileges
+  (void)result; // Suppress unused variable warning
   
   adapter->stop();
 }
@@ -54,9 +71,12 @@ TEST_F(PlainIPAdapterTest, InitTest) {
 TEST_F(PlainIPAdapterTest, SendReceiveTest) {
   // Test that send/receive don't crash when adapter is not initialized
   byte_buffer test_buffer;
-  test_buffer.append(0x45); // IP version 4, header length 5
+  bool success = test_buffer.append(0x45); // IP version 4, header length 5
+  EXPECT_TRUE(success);
+  
   for (int i = 0; i < 19; ++i) {
-    test_buffer.append(0x00);
+    success = test_buffer.append(0x00);
+    EXPECT_TRUE(success);
   }
   
   bool result = adapter->send_pdu(test_buffer.copy());

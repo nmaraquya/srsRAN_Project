@@ -41,15 +41,20 @@ target_include_directories(ngu_session_manager_test PRIVATE ${CMAKE_SOURCE_DIR})
 gtest_discover_tests(ngu_session_manager_test)
 
 
+
+
 add_executable(plain_ip_adapter_test plain_ip_adapter_test.cpp)
 
 target_include_directories(plain_ip_adapter_test PRIVATE
     ${CMAKE_SOURCE_DIR}
 )
 
-target_link_libraries(plain_ip_adapter_test
-    srsran_cu_up_plain_ip
+target_link_libraries(plain_ip_adapter_test 
+    srsran_cu_up          # Link to the main CU-UP library instead
+    srsran_support
+    srslog
     gtest
-    gtest_main)
+    gtest_main
+)
 
 add_test(plain_ip_adapter_test plain_ip_adapter_test)
