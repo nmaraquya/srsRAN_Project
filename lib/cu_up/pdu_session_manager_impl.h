@@ -88,6 +88,9 @@ public:
   gtpu_teid_t allocate_local_teid(pdu_session_id_t pdu_session_id);
 
 private:
+  void setup_plain_ip_bearer(pdu_session_context& session_ctx,
+                              const e1ap_drb_to_setup_item_ng_ran& drb_to_setup);
+
   drb_setup_result handle_drb_to_setup_item(pdu_session&                         new_session,
                                             const e1ap_drb_to_setup_item_ng_ran& drb_to_setup);
 

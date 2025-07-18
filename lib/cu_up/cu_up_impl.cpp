@@ -29,6 +29,8 @@
 #include "srsran/gtpu/gtpu_echo_factory.h"
 #include "srsran/gtpu/gtpu_teid_pool_factory.h"
 #include "srsran/support/executors/execute_until_success.h"
+#include "adapters/plain_ip_adapter.h"
+#include "adapters/plain_ip_sdap_adapter.h"
 
 #include <future>
 
@@ -109,13 +111,43 @@ cu_up::cu_up(const cu_up_config& config_, const cu_up_dependencies& dependencies
   gw_data_gtpu_demux_adapter.connect_gtpu_demux(*ngu_demux);
   
 // plain ip plain_ip plainip
+//if (cfg.use_plain_ip) {
+//  plain_ip = std::make_unique<srs_cu_up::plain_ip_adapter>();
+//  if (!plain_ip->init()) {
+//    report_error("Failed to initialize plain IP adapter");
+//  }
+//  logger.info("Plain IP adapter initialized successfully");
+//}
+
+
+// Plain IP initialization
 if (cfg.use_plain_ip) {
-  plain_ip = std::make_unique<srs_cu_up::plain_ip_adapter>();
-  if (!plain_ip->init()) {
+  plain_ip_config plain_ip_cfg;
+  plain_ip_cfg.interface_name = cfg.n3_cfg.plain_ip_interface_name.value_or("srs_tun0");
+  plain_ip_cfg.ip_address = cfg.n3_cfg.plain_ip_address.value_or("192.168.1.1");
+  plain_ip_cfg.netmask = cfg.n3_cfg.plain_ip_netmask.value_or("255.255.255.0");
+  plain_ip_cfg.enable_routing = cfg.n3_cfg.plain_ip_enable_routing.value_or(true);
+
+  plain_ip_ = std::make_unique<plain_ip_adapter>(plain_ip_cfg, ctrl_executor);
+  if (!plain_ip_->init()) {
     report_error("Failed to initialize plain IP adapter");
   }
-  logger.info("Plain IP adapter initialized successfully");
+
+  // Create adapters for SDAP integration
+  plain_ip_ul_adapter_ = std::make_unique<plain_ip_sdap_ul_adapter>();
+  plain_ip_dl_adapter_ = std::make_unique<plain_ip_sdap_dl_adapter>();
+
+  // Connect adapters
+  plain_ip_->connect_rx_notifier(*plain_ip_ul_adapter_);
+  plain_ip_dl_adapter_->connect_plain_ip(*plain_ip_);
+
+  // Start RX loop
+  plain_ip_->start_rx_loop();
+
+  logger.info("Plain IP adapter initialized successfully with interface {}",
+              plain_ip_cfg.interface_name);
 }
+
 
 
   // Establish new NG-U session and connect the instantiated session to the GTP-U DEMUX adapter, so that the latter

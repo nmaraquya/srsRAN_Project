@@ -56,6 +56,12 @@ struct n3_interface_config {
   uint32_t                  gtpu_queue_size;           // GTP-U queue size in PDUs.
   uint32_t                  gtpu_batch_size;           // Maximum number of GTP-U PDUs processed in a batch.
   bool                      warn_on_drop;
+  // Plain IP configuration
+  std::optional<std::string> plain_ip_interface_name;
+  std::optional<std::string> plain_ip_address;
+  std::optional<std::string> plain_ip_netmask;
+  std::optional<bool> plain_ip_enable_routing;
+
 };
 
 struct cu_up_test_mode_config {

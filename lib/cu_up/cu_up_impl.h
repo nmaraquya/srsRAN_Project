@@ -22,6 +22,8 @@
 
 #pragma once
 #include "adapters/plain_ip_adapter.h"
+#include "adapters/plain_ip_sdap_adapter.h"
+
 
 #include "adapters/e1ap_adapters.h"
 #include "adapters/gtpu_adapters.h"
@@ -91,6 +93,10 @@ private:
   network_gateway_data_gtpu_demux_adapter gw_data_gtpu_demux_adapter;
   gtpu_network_gateway_adapter            gtpu_gw_adapter;
   e1ap_cu_up_manager_adapter              e1ap_cu_up_mng_adapter;
+  // Plain IP components
+  std::unique_ptr<plain_ip_adapter> plain_ip_;
+  std::unique_ptr<plain_ip_sdap_ul_adapter> plain_ip_ul_adapter_;
+  std::unique_ptr<plain_ip_sdap_dl_adapter> plain_ip_dl_adapter_;
 
   std::mutex mutex;
   bool       running{false};
@@ -100,7 +106,12 @@ private:
 
   unique_timer statistics_report_timer;
   
-  std::unique_ptr<plain_ip_adapter> plain_ip;
+//  std::unique_ptr<plain_ip_adapter> plain_ip;
+  // Plain IP components
+  std::unique_ptr<plain_ip_adapter> plain_ip_;
+  std::unique_ptr<plain_ip_sdap_ul_adapter> plain_ip_ul_adapter_;
+  std::unique_ptr<plain_ip_sdap_dl_adapter> plain_ip_dl_adapter_;
+
 
 };
 
