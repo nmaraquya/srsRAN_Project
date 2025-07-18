@@ -252,8 +252,8 @@ void cu_up::stop()
     return;
   }
 
-  if (plain_ip) {
-    plain_ip->stop();
+  if (plain_ip_) {
+    plain_ip_->stop();
   }
 
   logger.debug("CU-UP stopping...");

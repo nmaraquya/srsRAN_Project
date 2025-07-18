@@ -108,9 +108,9 @@ private:
   
 //  std::unique_ptr<plain_ip_adapter> plain_ip;
   // Plain IP components
-  std::unique_ptr<plain_ip_adapter> plain_ip_;
-  std::unique_ptr<plain_ip_sdap_ul_adapter> plain_ip_ul_adapter_;
-  std::unique_ptr<plain_ip_sdap_dl_adapter> plain_ip_dl_adapter_;
+//  std::unique_ptr<plain_ip_adapter> plain_ip_;
+//  std::unique_ptr<plain_ip_sdap_ul_adapter> plain_ip_ul_adapter_;
+//  std::unique_ptr<plain_ip_sdap_dl_adapter> plain_ip_dl_adapter_;
 
 
 };

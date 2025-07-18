@@ -5,6 +5,8 @@
 #include "srsran/sdap/sdap.h"
 #include "srsran/support/async/async_task.h"
 #include "srsran/support/executors/task_executor.h"
+#include "srsran/srslog/srslog.h"  // Add this include
+
 #include <atomic>
 #include <memory>
 
