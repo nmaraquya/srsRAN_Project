@@ -30,56 +30,168 @@
 #include "srsran/support/rate_limiting/token_bucket_config.h"
 #include "srsran/support/srsran_assert.h"
 #include <utility>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
 
 using namespace srsran;
 using namespace srs_cu_up;
 
-pdu_session_manager_impl::pdu_session_manager_impl(ue_index_t                                       ue_index_,
-                                                   std::map<five_qi_t, srs_cu_up::cu_up_qos_config> qos_cfg_,
-                                                   const security::sec_as_config&                   security_info_,
-                                                   const n3_interface_config&                       n3_config_,
-                                                   const cu_up_test_mode_config&                    test_mode_config_,
-                                                   cu_up_ue_logger&                                 logger_,
-                                                   uint64_t                                         ue_dl_ambr,
-                                                   unique_timer&        ue_inactivity_timer_,
-                                                   timer_factory        ue_dl_timer_factory_,
-                                                   timer_factory        ue_ul_timer_factory_,
-                                                   timer_factory        ue_ctrl_timer_factory_,
-                                                   f1u_cu_up_gateway&   f1u_gw_,
-                                                   ngu_session_manager& ngu_session_mngr_,
-                                                   gtpu_teid_pool&      n3_teid_allocator_,
-                                                   gtpu_teid_pool&      f1u_teid_allocator_,
-                                                   gtpu_demux_ctrl&     gtpu_rx_demux_,
-                                                   task_executor&       ue_dl_exec_,
-                                                   task_executor&       ue_ul_exec_,
-                                                   task_executor&       ue_ctrl_exec_,
-                                                   task_executor&       crypto_exec_,
-                                                   dlt_pcap&            gtpu_pcap_) :
-  ue_index(ue_index_),
-  qos_cfg(std::move(qos_cfg_)),
-  security_info(security_info_),
-  n3_config(n3_config_),
-  test_mode_config(test_mode_config_),
-  logger(logger_),
-  ue_inactivity_timer(ue_inactivity_timer_),
-  ue_dl_timer_factory(ue_dl_timer_factory_),
-  ue_ul_timer_factory(ue_ul_timer_factory_),
-  ue_ctrl_timer_factory(ue_ctrl_timer_factory_),
-  n3_teid_allocator(n3_teid_allocator_),
-  f1u_teid_allocator(f1u_teid_allocator_),
-  gtpu_rx_demux(gtpu_rx_demux_),
-  ue_dl_exec(ue_dl_exec_),
-  ue_ul_exec(ue_ul_exec_),
-  ue_ctrl_exec(ue_ctrl_exec_),
-  crypto_exec(crypto_exec_),
-  gtpu_pcap(gtpu_pcap_),
-  f1u_gw(f1u_gw_),
-  ngu_session_mngr(ngu_session_mngr_)
+pdu_session_manager_impl::pdu_session_manager_impl(
+    ue_index_t ue_index_,
+    std::map<five_qi_t, srs_cu_up::cu_up_qos_config> qos_cfg_,
+    const security::sec_as_config& security_info_,
+    const n3_interface_config& n3_config_,
+    const cu_up_test_mode_config& test_mode_config_,
+    cu_up_ue_logger& logger_,
+    uint64_t ue_dl_ambr,
+    unique_timer& ue_inactivity_timer_,
+    timer_factory ue_dl_timer_factory_,
+    timer_factory ue_ul_timer_factory_,
+    timer_factory ue_ctrl_timer_factory_,
+    f1u_cu_up_gateway& f1u_gw_,
+    ngu_session_manager& ngu_session_mngr_,
+    gtpu_teid_pool& n3_teid_allocator_,
+    gtpu_teid_pool& f1u_teid_allocator_,
+    gtpu_demux_ctrl& gtpu_rx_demux_,
+    task_executor& ue_dl_exec_,
+    task_executor& ue_ul_exec_,
+    task_executor& ue_ctrl_exec_,
+    task_executor& crypto_exec_,
+    dlt_pcap& gtpu_pcap_) :
+    ue_index(ue_index_),
+    qos_cfg(qos_cfg_),
+    security_info(security_info_),
+    n3_config(n3_config_),
+    test_mode_config(test_mode_config_),
+    logger(logger_),
+    ue_inactivity_timer(ue_inactivity_timer_),
+    ue_dl_timer_factory(ue_dl_timer_factory_),
+    ue_ul_timer_factory(ue_ul_timer_factory_),
+    ue_ctrl_timer_factory(ue_ctrl_timer_factory_),
+    n3_teid_allocator(n3_teid_allocator_),
+    f1u_teid_allocator(f1u_teid_allocator_),
+    gtpu_rx_demux(gtpu_rx_demux_),
+    ue_dl_exec(ue_dl_exec_),
+    ue_ul_exec(ue_ul_exec_),
+    ue_ctrl_exec(ue_ctrl_exec_),
+    crypto_exec(crypto_exec_),
+    gtpu_pcap(gtpu_pcap_),
+    f1u_gw(f1u_gw_),
+    ngu_session_mngr(ngu_session_mngr_)
 {
-  token_bucket_config ue_ambr_config =
-      generate_token_bucket_config(ue_dl_ambr, ue_dl_ambr, timer_duration(100), ue_ctrl_timer_factory);
-  ue_ambr_limiter = std::make_unique<token_bucket>(ue_ambr_config);
+    ip_manager_ = std::make_unique<ue_ip_manager>();
+    ue_ambr_limiter = std::make_unique<token_bucket>(ue_dl_ambr);
 }
+
+bool pdu_session_manager_impl::setup_direct_forwarding(pdu_session_id_t pdu_session_id,
+                                                     const direct_forwarding_config& cfg)
+{
+    auto it = pdu_sessions.find(pdu_session_id);
+    if (it == pdu_sessions.end()) {
+        logger.error("Cannot setup direct forwarding - PDU session {} not found", pdu_session_id);
+        return false;
+    }
+
+    // Allocate IP address for the session
+    std::string ue_ip;
+    if (!ip_manager_->allocate_ip(pdu_session_id, ue_ip)) {
+        logger.error("Failed to allocate IP for PDU session {}", pdu_session_id);
+        return false;
+    }
+
+    // Configure direct forwarding for the session
+    if (!configure_direct_forwarding(*it->second)) {
+        logger.error("Failed to configure direct forwarding for PDU session {}", pdu_session_id);
+        ip_manager_->release_ip(pdu_session_id);
+        return false;
+    }
+
+    it->second->mode = forwarding_mode::DIRECT_FORWARDING;
+    it->second->allocated_ue_ip = ue_ip;
+
+    logger.info("Setup direct forwarding for PDU session {} with IP {}", pdu_session_id, ue_ip);
+    return true;
+}
+
+bool pdu_session_manager_impl::remove_direct_forwarding(pdu_session_id_t pdu_session_id)
+{
+    auto it = pdu_sessions.find(pdu_session_id);
+    if (it == pdu_sessions.end()) {
+        logger.error("Cannot remove direct forwarding - PDU session {} not found", pdu_session_id);
+        return false;
+    }
+
+    if (it->second->mode != forwarding_mode::DIRECT_FORWARDING) {
+        logger.warning("PDU session {} is not in direct forwarding mode", pdu_session_id);
+        return false;
+    }
+
+    // Cleanup direct forwarding
+    if (!cleanup_direct_forwarding(*it->second)) {
+        logger.error("Failed to cleanup direct forwarding for PDU session {}", pdu_session_id);
+        return false;
+    }
+
+    // Release IP address
+    if (!ip_manager_->release_ip(pdu_session_id)) {
+        logger.warning("Failed to release IP for PDU session {}", pdu_session_id);
+    }
+
+    it->second->mode = forwarding_mode::STANDARD_GTPU;
+    it->second->allocated_ue_ip.clear();
+
+    logger.info("Removed direct forwarding for PDU session {}", pdu_session_id);
+    return true;
+}
+
+bool pdu_session_manager_impl::get_session_stats(pdu_session_id_t pdu_session_id,
+                                               direct_forwarding_stats& stats)
+{
+    auto it = pdu_sessions.find(pdu_session_id);
+    if (it == pdu_sessions.end()) {
+        logger.error("Cannot get stats - PDU session {} not found", pdu_session_id);
+        return false;
+    }
+
+    if (it->second->mode != forwarding_mode::DIRECT_FORWARDING) {
+        logger.warning("PDU session {} is not in direct forwarding mode", pdu_session_id);
+        return false;
+    }
+
+    // Collect statistics from the session
+    // This is a placeholder - implement actual statistics collection
+    stats.active_sessions = 1;
+    stats.packets_forwarded = 0; // TODO: implement counter
+    stats.bytes_forwarded = 0;   // TODO: implement counter
+    stats.dropped_packets = 0;    // TODO: implement counter
+
+    return true;
+}
+
+bool pdu_session_manager_impl::configure_direct_forwarding(pdu_session& session)
+{
+    // Create direct forwarding manager if not exists
+    if (!session.direct_forwarder) {
+        session.direct_forwarder = std::make_unique<direct_forwarding_manager>(df_config_);
+        if (!session.direct_forwarder->init()) {
+            logger.error("Failed to initialize direct forwarding manager");
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool pdu_session_manager_impl::cleanup_direct_forwarding(pdu_session& session)
+{
+    if (session.direct_forwarder) {
+        session.direct_forwarder->stop();
+        session.direct_forwarder.reset();
+    }
+    return true;
+}
+
 
 pdu_session_setup_result pdu_session_manager_impl::setup_pdu_session(const e1ap_pdu_session_res_to_setup_item& session)
 {

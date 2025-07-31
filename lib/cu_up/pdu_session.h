@@ -98,7 +98,17 @@ struct pdu_session {
 
   // DRB contexts
   drb_context*                                     default_drb = nullptr; // non-owning pointer to default DRB, if any
-  std::map<drb_id_t, std::unique_ptr<drb_context>> drbs;                  // key is drb_id
+  std::map<drb_id_t, std::unique_ptr<drb_context>> drbs;
+
+    // Add new members for direct forwarding
+    forwarding_mode mode = forwarding_mode::STANDARD_GTPU;
+    std::unique_ptr<direct_forwarding_manager> direct_forwarder;
+    std::string allocated_ue_ip;
+
+    // Add new methods
+    bool setup_direct_forwarding(const direct_forwarding_config& cfg);
+    bool teardown_direct_forwarding();
+               // key is drb_id
 };
 
 } // namespace srsran::srs_cu_up

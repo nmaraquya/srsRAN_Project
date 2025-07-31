@@ -34,6 +34,9 @@
 #include "srsran/gtpu/gtpu_teid_pool.h"
 #include "srsran/support/rate_limiting/token_bucket.h"
 #include "srsran/support/timers.h"
+#include "direct_forwarding_config.h"
+#include "ue_ip_manager.h"
+
 #include <map>
 
 namespace srsran::srs_cu_up {
@@ -87,7 +90,22 @@ public:
   /// where X is reserved, U are the bytes for UE id and P is the byte for PDU session Id.
   gtpu_teid_t allocate_local_teid(pdu_session_id_t pdu_session_id);
 
+    // Add new methods
+    bool setup_direct_forwarding(pdu_session_id_t pdu_session_id,
+                               const direct_forwarding_config& cfg);
+    bool remove_direct_forwarding(pdu_session_id_t pdu_session_id);
+    bool get_session_stats(pdu_session_id_t pdu_session_id,
+                          direct_forwarding_stats& stats);
+
 private:
+    // Add new members
+    std::unique_ptr<ue_ip_manager> ip_manager_;
+    direct_forwarding_config df_config_;
+
+    // Add new private methods
+    bool configure_direct_forwarding(pdu_session& session);
+    bool cleanup_direct_forwarding(pdu_session& session);
+
   void setup_plain_ip_bearer( pdu_session   & session_ctx,
                               const e1ap_drb_to_setup_item_ng_ran& drb_to_setup);
 

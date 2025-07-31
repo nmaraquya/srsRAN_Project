@@ -66,7 +66,7 @@ public:
                                           metrics_agg);
     rx = std::make_unique<pdcp_entity_rx>(ue_index,
                                           rb_id,
-                                          config.get_rx_config(),
+                                            config.get_rx_config(),
                                           rx_upper_dn,
                                           rx_upper_cn,
                                           ue_ctrl_timer_factory,
