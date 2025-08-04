@@ -21,6 +21,9 @@
  */
 
 #pragma once
+#include "direct_forwarding_types.h"       // Add this include
+#include "direct_forwarding_config.h"      // Add this include
+#include "direct_forwarding_manager.h"     // Add this include
 
 #include "adapters/gtpu_adapters.h"
 #include "adapters/sdap_adapters.h"
@@ -72,6 +75,29 @@ struct pdu_session {
   }
 
   bool stopped = false;
+
+  // Add new members for direct forwarding
+  forwarding_mode mode = forwarding_mode::STANDARD_GTPU;
+  std::unique_ptr<direct_forwarding_manager> direct_forwarder;
+  std::string allocated_ue_ip;
+
+  // Add new methods
+  bool setup_direct_forwarding(const direct_forwarding_config& cfg) {
+    if (direct_forwarder != nullptr) {
+      return false; // Already set up
+    }
+    direct_forwarder = std::make_unique<direct_forwarding_manager>(cfg);
+    return direct_forwarder->init();
+  }
+
+  bool teardown_direct_forwarding() {
+    if (direct_forwarder == nullptr) {
+      return false;
+    }
+    direct_forwarder->stop();
+    direct_forwarder.reset();
+    return true;
+  }
 
   std::unique_ptr<sdap_entity>     sdap;
   std::unique_ptr<gtpu_tunnel_ngu> gtpu;
