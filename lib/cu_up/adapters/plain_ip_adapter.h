@@ -6,6 +6,8 @@
 #include "srsran/support/executors/task_executor.h"
 #include "srsran/srslog/srslog.h"
 
+#include "plain_ip_sdap_adapter.h"
+
 #include <atomic>
 #include <memory>
 #include <unordered_map>
