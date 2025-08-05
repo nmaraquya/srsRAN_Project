@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "lib/cu_up/adapters/plain_ip_adapter.h"
+#include "plain_ip_adapter.h"
 #include "srsran/support/executors/task_executor.h"
 #include "srsran/srslog/srslog.h"
 #include <memory>

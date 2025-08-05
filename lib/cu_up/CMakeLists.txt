@@ -45,6 +45,7 @@ target_link_libraries(srsran_cu_up
         srsran_sdap
         srsran_security
         srsran_support
+        direct_forwarding_manager.h
         srslog)
 
 add_library(srsran_o_cu_up STATIC

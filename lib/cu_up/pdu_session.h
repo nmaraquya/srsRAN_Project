@@ -21,9 +21,10 @@
  */
 
 #pragma once
-#include "direct_forwarding_types.h"       // Add this include
-#include "direct_forwarding_config.h"      // Add this include
-#include "direct_forwarding_manager.h"     // Add this include
+#include "srsran/cu_cp/direct_forwarding_types.h"     // Corrected path
+#include "direct_forwarding_config.h"    // Changed path
+#include "adapters/direct_forwarding_manager.h"   // Changed path
+
 
 #include "adapters/gtpu_adapters.h"
 #include "adapters/sdap_adapters.h"
