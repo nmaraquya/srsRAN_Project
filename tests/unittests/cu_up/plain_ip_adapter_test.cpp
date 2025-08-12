@@ -85,3 +85,49 @@ TEST_F(PlainIPAdapterTest, SendReceiveTest) {
   byte_buffer received = adapter->receive_pdu();
   EXPECT_TRUE(received.empty()); // Should be empty when not initialized
 }
+
+
+// Mock DN receiver
+class MockDNReceiver : public plain_ip_rx_data_notifier {
+public:
+    byte_buffer last_pkt;
+    void on_new_ip_packet(byte_buffer pkt) override {
+        last_pkt = std::move(pkt);
+    }
+};
+
+TEST(PlainIPAdapterTest, UEtoDNPacketFlow) {
+    srslog::init();
+    plain_ip_config config;
+    config.interface_name = "test_tun0";
+    config.ip_address = "192.168.1.1";
+    config.netmask = "255.255.255.0";
+    config.enable_routing = false;
+
+    mock_task_executor executor;
+    plain_ip_adapter adapter(config, executor);
+
+    ASSERT_TRUE(adapter.init());
+
+    MockDNReceiver dn_receiver;
+    adapter.connect_rx_notifier(dn_receiver);
+
+    // Simulate UE packet
+    byte_buffer pkt;
+  ASSERT_TRUE(pkt.append(0x45)); // IPv4 header
+  for (int i = 0; i < 19; ++i) ASSERT_TRUE(pkt.append(0x00));
+
+    ASSERT_TRUE(adapter.send_pdu(pkt.copy()));
+
+byte_buffer rx_pkt = adapter.receive_pdu();
+if (!rx_pkt.empty()) {
+    dn_receiver.on_new_ip_packet(std::move(rx_pkt));
+}
+
+    // Check DN received packet
+    EXPECT_FALSE(dn_receiver.last_pkt.empty());
+    EXPECT_EQ(dn_receiver.last_pkt[0], 0x45);
+
+    adapter.stop();
+    srslog::flush();
+}
