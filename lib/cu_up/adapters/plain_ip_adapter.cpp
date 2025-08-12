@@ -241,6 +241,7 @@ bool plain_ip_adapter::setup_routing()
 {
   // This is a simplified routing setup
   // In a real implementation, you might want to add specific routes
+  logger_.info("Routing setup started for interface {}", config_.interface_name);
   std::string cmd = "ip route add 192.168.1.0/24 dev " + config_.interface_name;
   int result = system(cmd.c_str());
 

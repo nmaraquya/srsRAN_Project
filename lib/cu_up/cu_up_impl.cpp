@@ -122,6 +122,8 @@ cu_up::cu_up(const cu_up_config& config_, const cu_up_dependencies& dependencies
 
 // Plain IP initialization
 if (cfg.use_plain_ip) {
+
+  logger.info("plain_ip initialization started");
   plain_ip_config plain_ip_cfg;
   plain_ip_cfg.interface_name = cfg.n3_cfg.plain_ip_interface_name.value_or("srs_tun0");
   plain_ip_cfg.ip_address = cfg.n3_cfg.plain_ip_address.value_or("192.168.1.1");
@@ -136,6 +138,10 @@ if (cfg.use_plain_ip) {
   // Create adapters for SDAP integration
   plain_ip_ul_adapter_ = std::make_unique<plain_ip_sdap_ul_adapter>();
   plain_ip_dl_adapter_ = std::make_unique<plain_ip_sdap_dl_adapter>();
+
+  // TODO
+  // Connect SDAP handler (replace sdap_handler with your actual instance)
+  //plain_ip_ul_adapter_->connect_sdap(sdap_handler);
 
   // Connect adapters
   plain_ip_->connect_rx_notifier(*plain_ip_ul_adapter_);
