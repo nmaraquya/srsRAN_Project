@@ -62,7 +62,11 @@ public:
   gtpu_sdap_adapter()           = default;
   ~gtpu_sdap_adapter() override = default;
 
-  void connect_sdap(sdap_tx_sdu_handler& sdap_handler_) { sdap_handler = &sdap_handler_; }
+  void connect_sdap(sdap_tx_sdu_handler& sdap_handler_) { 
+    
+  srslog::fetch_basic_logger("GTPU", false).debug(" !! GTPU adapter connected to SDAP");
+  sdap_handler = &sdap_handler_; 
+}
 
   void on_new_sdu(byte_buffer sdu, qos_flow_id_t qos_flow_id) override
   {
