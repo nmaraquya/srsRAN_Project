@@ -31,8 +31,8 @@ plain_ip_sdap_ul_adapter::plain_ip_sdap_ul_adapter() :
 
 void plain_ip_sdap_ul_adapter::connect_sdap(sdap_tx_sdu_handler& sdap_handler)
 {
-  sdap_handler_ = &sdap_handler;
   logger_.info(" !! Plain IP UL adapter connected to SDAP");
+  sdap_handler_ = &sdap_handler;
 }
 
 void plain_ip_sdap_ul_adapter::disconnect_sdap()

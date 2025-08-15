@@ -143,6 +143,61 @@ byte_buffer plain_ip_adapter::receive_pdu()
   return pdu;
 }
 
+void plain_ip_adapter::register_rx_notifier(const std::string& ue_ip, plain_ip_rx_data_notifier& notifier) {
+    rx_notifiers_[ue_ip] = &notifier;
+}
+void plain_ip_adapter::unregister_rx_notifier(const std::string& ue_ip) {
+    rx_notifiers_.erase(ue_ip);
+}
+/*
+void plain_ip_adapter::handle_rx_packets()
+{
+  while (rx_loop_running_ && running_) {
+    byte_buffer pdu = receive_pdu();
+    if (!pdu.empty() && rx_notifier_) {
+      rx_notifier_->on_new_ip_packet(std::move(pdu));
+    }
+
+    // Small delay to prevent busy waiting
+    std::this_thread::sleep_for(std::chrono::microseconds(100));
+  }
+}
+*/
+// Helper to extract destination IP as string from a byte_buffer
+std::string plain_ip_adapter::extract_dest_ip(const byte_buffer& pkt) {
+    if (pkt.length() < 20) {
+        return "";
+    }
+    // IPv4: bytes 16-19 are destination IP
+    uint8_t ip_bytes[4];
+    auto it = pkt.begin();
+    std::advance(it, 16);
+    for (int i = 0; i < 4; ++i, ++it) {
+        if (it == pkt.end()) return "";
+        ip_bytes[i] = *it;
+    }
+    char ip_str[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, ip_bytes, ip_str, INET_ADDRSTRLEN);
+    return std::string(ip_str);
+}
+void plain_ip_adapter::handle_rx_packets() {
+    
+  while (rx_loop_running_ && running_) {
+    
+    byte_buffer pkt = receive_pdu();
+    std::string dest_ip = extract_dest_ip(pkt); // implement this helper
+     logger_.warning("handle_rx_packets.....", dest_ip);
+    auto it = rx_notifiers_.find(dest_ip);
+    if (it != rx_notifiers_.end()) {
+        it->second->on_new_ip_packet(std::move(pkt));
+    } else {
+        logger_.warning("No notifier for IP {}", dest_ip);
+    }
+    // Small delay to prevent busy waiting
+    std::this_thread::sleep_for(std::chrono::microseconds(100));
+  }
+}
+
 void plain_ip_adapter::connect_rx_notifier(plain_ip_rx_data_notifier& notifier)
 {
   rx_notifier_ = &notifier;
@@ -172,18 +227,6 @@ void plain_ip_adapter::stop_rx_loop()
   rx_loop_running_ = false;
 }
 
-void plain_ip_adapter::handle_rx_packets()
-{
-  while (rx_loop_running_ && running_) {
-    byte_buffer pdu = receive_pdu();
-    if (!pdu.empty() && rx_notifier_) {
-      rx_notifier_->on_new_ip_packet(std::move(pdu));
-    }
-
-    // Small delay to prevent busy waiting
-    std::this_thread::sleep_for(std::chrono::microseconds(100));
-  }
-}
 
 bool plain_ip_adapter::configure_interface()
 {

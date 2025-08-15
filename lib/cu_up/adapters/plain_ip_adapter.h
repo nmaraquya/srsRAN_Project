@@ -30,6 +30,7 @@ public:
 
 /// Plain IP adapter that handles TUN interface and IP packet processing
 class plain_ip_adapter {
+  std::unordered_map<std::string, plain_ip_rx_data_notifier*> rx_notifiers_;
 public:
   plain_ip_adapter(const plain_ip_config& config, task_executor& executor);
   ~plain_ip_adapter();
@@ -47,6 +48,9 @@ public:
   void start_rx_loop();
   void stop_rx_loop();
 
+  void register_rx_notifier(const std::string& ue_ip, plain_ip_rx_data_notifier& notifier);
+  void unregister_rx_notifier(const std::string& ue_ip);
+
 private:
   void handle_rx_packets();
   bool configure_interface();
@@ -58,7 +62,8 @@ private:
   std::atomic<bool> rx_loop_running_{false};
   task_executor& executor_;
   plain_ip_rx_data_notifier* rx_notifier_ = nullptr;
-
+ std::string extract_dest_ip(const byte_buffer& pkt);
+  
   srslog::basic_logger& logger_;
 };
 
