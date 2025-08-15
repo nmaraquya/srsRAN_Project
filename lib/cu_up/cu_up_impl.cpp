@@ -224,7 +224,9 @@ void cu_up::start()
           CORO_BEGIN(ctx);
 
           // Connect to CU-CP and send E1 Setup Request and await for E1 setup response.
+            logger.info("todo !! CORO_AWAIT 0...");
           CORO_AWAIT(launch_async<initial_cu_up_setup_routine>(cfg, *e1ap));
+            logger.info("todo !! CORO_AWAIT 1...");
 
           if (cfg.test_mode_cfg.enabled) {
             logger.info("enabling test mode...");
