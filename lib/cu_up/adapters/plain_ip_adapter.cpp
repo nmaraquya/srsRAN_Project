@@ -183,10 +183,18 @@ std::string plain_ip_adapter::extract_dest_ip(const byte_buffer& pkt) {
 void plain_ip_adapter::handle_rx_packets() {
     
   while (rx_loop_running_ && running_) {
-    
     byte_buffer pkt = receive_pdu();
+    if (pkt.empty()) {
+      std::this_thread::sleep_for(std::chrono::microseconds(100));
+      continue;
+    }
+    if (pkt.length() < 20) {
+      logger_.warning("Received packet too short for IP header: {} bytes", pkt.length());
+      std::this_thread::sleep_for(std::chrono::microseconds(100));
+      continue;
+    }
     std::string dest_ip = extract_dest_ip(pkt); // implement this helper
-     logger_.warning("handle_rx_packets.....", dest_ip);
+    logger_.warning("handle_rx_packets.....", dest_ip);
     auto it = rx_notifiers_.find(dest_ip);
     if (it != rx_notifiers_.end()) {
         it->second->on_new_ip_packet(std::move(pkt));
