@@ -150,13 +150,14 @@ pdu_session_setup_result pdu_session_manager_impl::setup_pdu_session(const e1ap_
   msg.ue_ctrl_timer_factory            = ue_ctrl_timer_factory;
   new_session->gtpu                    = create_gtpu_tunnel_ngu(msg);
 
+// After SDAP entity creation
+new_session->plain_ip_ul_adapter = std::make_unique<plain_ip_sdap_ul_adapter>();
+new_session->plain_ip_ul_adapter->connect_sdap(new_session->sdap->get_sdap_tx_sdu_handler());
   // Connect adapters
   new_session->sdap_to_gtpu_adapter.connect_gtpu(*new_session->gtpu->get_tx_lower_layer_interface());
   new_session->gtpu_to_sdap_adapter.connect_sdap(new_session->sdap->get_sdap_tx_sdu_handler());
   new_session->gtpu_to_udp_adapter.connect_network_gateway(n3_gw);
-// After SDAP entity creation
-new_session->plain_ip_ul_adapter = std::make_unique<plain_ip_sdap_ul_adapter>();
-new_session->plain_ip_ul_adapter->connect_sdap(new_session->sdap->get_sdap_tx_sdu_handler());
+  
 
   // Register tunnel at demux
   expected<std::unique_ptr<gtpu_demux_dispatch_queue>> expected_dispatch_queue =
