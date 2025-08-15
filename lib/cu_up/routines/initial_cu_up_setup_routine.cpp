@@ -56,6 +56,7 @@ void initial_cu_up_setup_routine::operator()(coro_context<async_task<void>>& ctx
 
 async_task<cu_up_e1_setup_response> initial_cu_up_setup_routine::start_cu_up_e1_setup_request()
 {
+  logger.debug("async_task<cu_up_e1_setup_response> initial_cu_up_setup_routine::start_cu_up_e1_setup_request().");
   // Prepare request to send to E1.
   cu_up_e1_setup_request request_msg = {};
 

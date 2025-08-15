@@ -220,11 +220,12 @@ void cu_up::start()
   std::future<void>  fut = p.get_future();
 
   if (not ctrl_executor.execute([this, &p]() {
+            logger.info("todo !! CORO_BEGIN 0...");
         main_ctrl_loop.schedule([this, &p](coro_context<async_task<void>>& ctx) {
           CORO_BEGIN(ctx);
 
-          // Connect to CU-CP and send E1 Setup Request and await for E1 setup response.
             logger.info("todo !! CORO_AWAIT 0...");
+          // Connect to CU-CP and send E1 Setup Request and await for E1 setup response.
           CORO_AWAIT(launch_async<initial_cu_up_setup_routine>(cfg, *e1ap));
             logger.info("todo !! CORO_AWAIT 1...");
 
