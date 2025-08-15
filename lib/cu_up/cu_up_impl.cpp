@@ -139,10 +139,6 @@ if (cfg.use_plain_ip) {
   plain_ip_ul_adapter_ = std::make_unique<plain_ip_sdap_ul_adapter>();
   plain_ip_dl_adapter_ = std::make_unique<plain_ip_sdap_dl_adapter>();
 
-  // TODO
-  // Connect SDAP handler (replace sdap_handler with your actual instance)
-  //plain_ip_ul_adapter_->connect_sdap(sdap_handler);
-
   // Connect adapters
   plain_ip_->connect_rx_notifier(*plain_ip_ul_adapter_);
   plain_ip_dl_adapter_->connect_plain_ip(*plain_ip_);
@@ -246,7 +242,9 @@ void cu_up::start()
   }
 
   // Block waiting for CU-UP setup to complete.
+  logger.info("todo !! fut.wait 0");  
   fut.wait();
+  logger.info("todo !! fut.wait 1");
 
   logger.info("CU-UP started successfully");
 }

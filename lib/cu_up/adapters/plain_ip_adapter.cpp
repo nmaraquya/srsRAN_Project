@@ -182,6 +182,7 @@ std::string plain_ip_adapter::extract_dest_ip(const byte_buffer& pkt) {
 }
 void plain_ip_adapter::handle_rx_packets() {
     
+      logger_.warning("entering handle_rx_packets loop");
   while (rx_loop_running_ && running_) {
     byte_buffer pkt = receive_pdu();
     if (pkt.empty()) {
