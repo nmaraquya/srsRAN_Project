@@ -204,6 +204,7 @@ void plain_ip_adapter::handle_rx_packets() {
     }
     // Small delay to prevent busy waiting
     std::this_thread::sleep_for(std::chrono::microseconds(100));
+    break;
   }
 }
 
