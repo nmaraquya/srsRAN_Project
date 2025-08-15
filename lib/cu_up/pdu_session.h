@@ -22,6 +22,7 @@
 
 #pragma once
 
+#include "adapters/plain_ip_sdap_adapter.h"
 #include "adapters/gtpu_adapters.h"
 #include "adapters/sdap_adapters.h"
 #include "drb_context.h"
@@ -30,6 +31,8 @@
 #include "srsran/gtpu/gtpu_teid_pool.h"
 #include "srsran/gtpu/gtpu_tunnel_ngu.h"
 #include "srsran/ran/up_transport_layer_info.h"
+
+
 
 namespace srsran::srs_cu_up {
 
@@ -75,6 +78,11 @@ struct pdu_session {
 
   std::unique_ptr<sdap_entity>     sdap;
   std::unique_ptr<gtpu_tunnel_ngu> gtpu;
+
+
+  // Adapters between SDAP and PLAIN_IP
+  std::unique_ptr<plain_ip_sdap_ul_adapter> plain_ip_ul_adapter;
+  std::unique_ptr<plain_ip_sdap_dl_adapter> plain_ip_dl_adapter;
 
   // Adapters between SDAP and GTPU
   gtpu_sdap_adapter gtpu_to_sdap_adapter;
