@@ -25,6 +25,8 @@
 #include "srsran/gtpu/gtpu_tunnel_ngu_tx.h"
 #include "srsran/pdcp/pdcp_tx.h"
 #include "srsran/sdap/sdap.h"
+#include "plain_ip_adapter.h"
+#include "plain_ip_sdap_adapter.h" 
 
 namespace srsran {
 namespace srs_cu_up {
@@ -37,15 +39,31 @@ public:
   ~sdap_gtpu_adapter() = default;
 
   void connect_gtpu(gtpu_tunnel_ngu_tx_lower_layer_interface& gtpu_handler_) { gtpu_handler = &gtpu_handler_; }
+    // Add Plain IP connection
+  void connect_plain_ip_dl(plain_ip_sdap_dl_adapter& plain_ip_dl_) { 
+    plain_ip_dl_adapter = &plain_ip_dl_; 
+    use_plain_ip = true;
+  }
 
   void on_new_sdu(byte_buffer sdu, qos_flow_id_t qfi) override
   {
-    srsran_assert(gtpu_handler != nullptr, "GTPU handler must not be nullptr");
-    gtpu_handler->handle_sdu(std::move(sdu), qfi);
+//    srsran_assert(gtpu_handler != nullptr, "GTPU handler must not be nullptr");
+//    gtpu_handler->handle_sdu(std::move(sdu), qfi);
+    if (use_plain_ip) {
+      // Route through Plain IP instead of GTP-U
+      srsran_assert(plain_ip_dl_adapter != nullptr, "PLAIN IP handler must not be nullptr");
+      plain_ip_dl_adapter->on_new_sdu(std::move(sdu), qfi);
+    } else {
+      // Original GTP-U path
+      srsran_assert(gtpu_handler != nullptr, "GTPU handler must not be nullptr");
+      gtpu_handler->handle_sdu(std::move(sdu), qfi);
+    }
   }
 
 private:
   gtpu_tunnel_ngu_tx_lower_layer_interface* gtpu_handler = nullptr;
+  plain_ip_sdap_dl_adapter* plain_ip_dl_adapter = nullptr;
+  bool use_plain_ip = true;
 };
 
 class sdap_pdcp_adapter : public sdap_tx_pdu_notifier

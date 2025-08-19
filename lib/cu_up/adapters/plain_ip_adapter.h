@@ -64,7 +64,7 @@ private:
   task_executor& ul_executor_;
   task_executor& dl_executor_;
   plain_ip_rx_data_notifier* rx_notifier_ = nullptr;
- std::string extract_dest_ip(const byte_buffer& pkt);
+  std::string extract_dest_ip(const byte_buffer& pkt);
   
   srslog::basic_logger& logger_;
 };
