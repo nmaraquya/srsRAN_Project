@@ -91,9 +91,10 @@ void plain_ip_sdap_dl_adapter::on_new_sdu(byte_buffer sdu, qos_flow_id_t qfi)
   // Forward SDU to Plain IP adapter (strip QFI information)
   logger_.debug("Forwarding DL SDU of {} bytes from QFI {} to Plain IP",
                 sdu.length(), qfi);
-  bool success = plain_ip_adapter_->send_pdu(std::move(sdu));
+  //bool success = plain_ip_adapter_->send_pdu(std::move(sdu));
+  plain_ip_adapter_->send_pdu_async(std::move(sdu));
 
-  if (!success) {
-    logger_.warning("Failed to send DL packet to Plain IP adapter");
-  }
+//  if (!success) {
+//    logger_.warning("Failed to send DL packet to Plain IP adapter");
+//  }
 }

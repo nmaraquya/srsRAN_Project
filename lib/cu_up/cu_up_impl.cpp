@@ -78,6 +78,8 @@ generate_cu_up_manager_impl_dependencies(const cu_up_dependencies&  dependencies
 cu_up::cu_up(const cu_up_config& config_, const cu_up_dependencies& dependencies) :
   cfg(config_),
   ctrl_executor(dependencies.exec_mapper->ctrl_executor()),
+  plain_ip_ul_executor(dependencies.exec_mapper->plain_ip_ul_executor()),
+  plain_ip_dl_executor(dependencies.exec_mapper->plain_ip_dl_executor()),
   timers(*dependencies.timers),
   main_ctrl_loop(128)
 {
@@ -109,20 +111,10 @@ cu_up::cu_up(const cu_up_config& config_, const cu_up_dependencies& dependencies
 
   // Connect GTP-U DEMUX to adapter.
   gw_data_gtpu_demux_adapter.connect_gtpu_demux(*ngu_demux);
-  
-// plain ip plain_ip plainip
-//if (cfg.use_plain_ip) {
-//  plain_ip = std::make_unique<srs_cu_up::plain_ip_adapter>();
-//  if (!plain_ip->init()) {
-//    report_error("Failed to initialize plain IP adapter");
-//  }
-//  logger.info("Plain IP adapter initialized successfully");
-//}
-
-
+   
 // Plain IP initialization
 if (cfg.use_plain_ip) {
-
+  
   logger.info("plain_ip initialization started");
   plain_ip_config plain_ip_cfg;
   plain_ip_cfg.interface_name = cfg.n3_cfg.plain_ip_interface_name.value_or("srs_tun0");
@@ -130,7 +122,8 @@ if (cfg.use_plain_ip) {
   plain_ip_cfg.netmask = cfg.n3_cfg.plain_ip_netmask.value_or("255.255.255.0");
   plain_ip_cfg.enable_routing = cfg.n3_cfg.plain_ip_enable_routing.value_or(true);
 
-  plain_ip_ = std::make_unique<plain_ip_adapter>(plain_ip_cfg, ctrl_executor);
+  plain_ip_ = std::make_unique<plain_ip_adapter>(plain_ip_cfg, plain_ip_ul_executor, plain_ip_dl_executor);
+//  plain_ip_ = std::make_unique<plain_ip_adapter>(plain_ip_cfg, ctrl_executor);
   if (!plain_ip_->init()) {
     report_error("Failed to initialize plain IP adapter");
   }

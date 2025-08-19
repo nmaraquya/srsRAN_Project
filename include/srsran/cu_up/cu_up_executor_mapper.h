@@ -80,6 +80,10 @@ public:
 
   /// \brief Instantiate executors for a created UE in the CU-UP.
   virtual std::unique_ptr<ue_executor_mapper> create_ue_executor_mapper() = 0;
+  
+  // Add to the cu_up_executor_mapper interface:
+  virtual task_executor& plain_ip_ul_executor() = 0;
+  virtual task_executor& plain_ip_dl_executor() = 0;
 };
 
 /// Configuration of a cu_up_executor_mapper that instantiates multiple strands associated with the same thread pool.

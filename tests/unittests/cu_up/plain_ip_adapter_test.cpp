@@ -2,6 +2,7 @@
 #include "../../../lib/cu_up/adapters/plain_ip_adapter.h"
 #include "srsran/support/executors/task_executor.h"
 #include "srsran/srslog/srslog.h"
+#include "cu_up_test_helpers.h"
 
 using namespace srsran;
 using namespace srs_cu_up;
@@ -28,7 +29,8 @@ protected:
     srslog::init();
     
     // Create a mock task executor
-    executor = std::make_unique<mock_task_executor>();
+    ul_executor = std::make_unique<mock_task_executor>();
+    dl_executor = std::make_unique<mock_task_executor>();
     
     // Create plain IP configuration
     config.interface_name = "test_tun0";
@@ -37,16 +39,18 @@ protected:
     config.enable_routing = false; // Disable routing for tests
     
     // Create the adapter with proper arguments
-    adapter = std::make_unique<plain_ip_adapter>(config, *executor);
+    adapter = std::make_unique<plain_ip_adapter>(config, *ul_executor, *dl_executor);
   }
   
   void TearDown() override {
     adapter.reset();
-    executor.reset();
+    ul_executor.reset();
+    dl_executor.reset();
     srslog::flush();
   }
   
-  std::unique_ptr<mock_task_executor> executor;
+  std::unique_ptr<mock_task_executor> ul_executor;
+  std::unique_ptr<mock_task_executor> dl_executor;
   plain_ip_config config;
   std::unique_ptr<plain_ip_adapter> adapter;
 };
@@ -103,9 +107,11 @@ TEST(PlainIPAdapterTest, UEtoDNPacketFlow) {
     config.ip_address = "192.168.1.1";
     config.netmask = "255.255.255.0";
     config.enable_routing = false;
+    
+    mock_task_executor ul_executor;
+    mock_task_executor dl_executor;
+    plain_ip_adapter adapter(config, ul_executor, dl_executor);
 
-    mock_task_executor executor;
-    plain_ip_adapter adapter(config, executor);
 
     ASSERT_TRUE(adapter.init());
 

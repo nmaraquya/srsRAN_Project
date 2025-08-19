@@ -69,6 +69,8 @@ private:
 
   cu_up_config   cfg;
   task_executor& ctrl_executor;
+  task_executor& plain_ip_ul_executor;
+  task_executor& plain_ip_dl_executor;
   timer_manager& timers;
 
   // logger
@@ -105,14 +107,7 @@ private:
   fifo_async_task_scheduler main_ctrl_loop;
 
   unique_timer statistics_report_timer;
-  
-//  std::unique_ptr<plain_ip_adapter> plain_ip;
-  // Plain IP components
-//  std::unique_ptr<plain_ip_adapter> plain_ip_;
-//  std::unique_ptr<plain_ip_sdap_ul_adapter> plain_ip_ul_adapter_;
-//  std::unique_ptr<plain_ip_sdap_dl_adapter> plain_ip_dl_adapter_;
-
-
+   
 };
 
 } // namespace srsran::srs_cu_up

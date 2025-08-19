@@ -32,12 +32,13 @@ public:
 class plain_ip_adapter {
   std::unordered_map<std::string, plain_ip_rx_data_notifier*> rx_notifiers_;
 public:
-  plain_ip_adapter(const plain_ip_config& config, task_executor& executor);
+  plain_ip_adapter(const plain_ip_config& config, task_executor& ul_executor, task_executor& dl_executor);
   ~plain_ip_adapter();
 
   bool init();
   void stop();
   bool send_pdu(byte_buffer pdu);
+  void send_pdu_async(byte_buffer pdu);
   byte_buffer receive_pdu();
 
   // Data path integration
@@ -60,7 +61,8 @@ private:
   int fd_{-1};
   std::atomic<bool> running_{false};
   std::atomic<bool> rx_loop_running_{false};
-  task_executor& executor_;
+  task_executor& ul_executor_;
+  task_executor& dl_executor_;
   plain_ip_rx_data_notifier* rx_notifier_ = nullptr;
  std::string extract_dest_ip(const byte_buffer& pkt);
   

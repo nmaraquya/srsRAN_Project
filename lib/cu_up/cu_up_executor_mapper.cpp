@@ -275,6 +275,8 @@ public:
                  config.strand_batch_size),
     ctrl_exec(decorator.decorate(cu_up_strand.get_executors()[0], true, std::nullopt, "cu_up_strand_ctrl_exec")),
     n3_exec(decorator.decorate(config.low_prio_executor, true, std::nullopt, "n3_exec")),
+    plain_ip_ul_exec(decorator.decorate(config.medium_prio_executor, true, std::nullopt, "plain_ip_ul_exec")),
+    plain_ip_dl_exec(decorator.decorate(config.medium_prio_executor, true, std::nullopt, "plain_ip_dl_exec")),
     cu_up_exec_pool(create_strands(config))
   {
   }
@@ -286,6 +288,9 @@ public:
   task_executor& e2_executor() override { return ctrl_exec; }
 
   task_executor& n3_executor() override { return n3_exec; }
+
+  task_executor& plain_ip_ul_executor() override { return plain_ip_ul_exec; }
+  task_executor& plain_ip_dl_executor() override { return plain_ip_dl_exec; }
 
   std::unique_ptr<ue_executor_mapper> create_ue_executor_mapper() override
   {
@@ -349,7 +354,10 @@ private:
   task_executor*                                               io_ul_exec_ptr;
 
   task_executor& n3_exec; // Executor reception of N3 packets from io_broker.
-
+  
+  task_executor& plain_ip_ul_exec; // Executor for plain ip ul
+  task_executor& plain_ip_dl_exec; // Executor for plain ip dl
+  
   // UE strands and respective executors.
   std::vector<std::unique_ptr<ue_strand_type>> ue_strands;
   std::vector<task_executor*>                  ue_ctrl_execs;

@@ -18,8 +18,8 @@
 using namespace srsran;
 using namespace srs_cu_up;
 
-plain_ip_adapter::plain_ip_adapter(const plain_ip_config& config, task_executor& executor) :
-  config_(config), executor_(executor), logger_(srslog::fetch_basic_logger("PLAIN-IP"))
+plain_ip_adapter::plain_ip_adapter(const plain_ip_config& config, task_executor& ul_executor, task_executor& dl_executor) :
+  config_(config), ul_executor_(ul_executor), dl_executor_(dl_executor), logger_(srslog::fetch_basic_logger("PLAIN-IP"))
 {
 }
 
@@ -94,6 +94,12 @@ void plain_ip_adapter::stop()
 
   logger_.info("Plain IP adapter stopped");
 }
+void plain_ip_adapter::send_pdu_async(byte_buffer pdu)
+{
+  dl_executor_.execute([this, pdu = std::move(pdu)]() mutable {
+    send_pdu(std::move(pdu));
+  });
+}
 
 bool plain_ip_adapter::send_pdu(byte_buffer pdu)
 {
@@ -149,21 +155,6 @@ void plain_ip_adapter::register_rx_notifier(const std::string& ue_ip, plain_ip_r
 void plain_ip_adapter::unregister_rx_notifier(const std::string& ue_ip) {
     rx_notifiers_.erase(ue_ip);
 }
-/*
-void plain_ip_adapter::handle_rx_packets()
-{
-  while (rx_loop_running_ && running_) {
-    byte_buffer pdu = receive_pdu();
-    if (!pdu.empty() && rx_notifier_) {
-      rx_notifier_->on_new_ip_packet(std::move(pdu));
-    }
-
-    // Small delay to prevent busy waiting
-    std::this_thread::sleep_for(std::chrono::microseconds(100));
-  }
-}
-*/
-// Helper to extract destination IP as string from a byte_buffer
 std::string plain_ip_adapter::extract_dest_ip(const byte_buffer& pkt) {
     if (pkt.length() < 20) {
         return "";
@@ -198,13 +189,14 @@ void plain_ip_adapter::handle_rx_packets() {
     logger_.warning("handle_rx_packets.....", dest_ip);
     auto it = rx_notifiers_.find(dest_ip);
     if (it != rx_notifiers_.end()) {
-        it->second->on_new_ip_packet(std::move(pkt));
+            ul_executor_.execute([notifier = it->second, pkt = std::move(pkt)]() mutable {
+        notifier->on_new_ip_packet(std::move(pkt));
+    });
     } else {
         logger_.warning("No notifier for IP {}", dest_ip);
     }
     // Small delay to prevent busy waiting
     std::this_thread::sleep_for(std::chrono::microseconds(100));
-    break;
   }
 }
 
@@ -227,7 +219,7 @@ void plain_ip_adapter::start_rx_loop()
   rx_loop_running_ = true;
 
   // Start async RX loop
-  executor_.execute([this]() {
+  dl_executor_.execute([this]() {
     handle_rx_packets();
   });
 }

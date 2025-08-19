@@ -55,7 +55,7 @@ class dummy_cu_up_executor_mapper final : public srs_cu_up::cu_up_executor_mappe
     task_executor& ul_pdu_executor() override { return *exec; }
     task_executor& dl_pdu_executor() override { return *exec; }
     task_executor& crypto_executor() override { return *exec; }
-
+  
     async_task<void> stop() override
     {
       return launch_async([](coro_context<async_task<void>>& ctx) {
@@ -77,6 +77,9 @@ public:
   task_executor& e2_executor() override { return *test_executor; }
 
   task_executor& n3_executor() override { return *test_executor; }
+
+  task_executor& plain_ip_ul_executor() override { return *test_executor; }
+  task_executor& plain_ip_dl_executor() override { return *test_executor; }
 
   std::unique_ptr<srs_cu_up::ue_executor_mapper> create_ue_executor_mapper() override
   {
