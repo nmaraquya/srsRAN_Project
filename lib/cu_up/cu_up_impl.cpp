@@ -72,7 +72,8 @@ generate_cu_up_manager_impl_dependencies(const cu_up_dependencies&  dependencies
           *dependencies.f1u_gateway,
           *dependencies.timers,
           *dependencies.gtpu_pcap,
-          main_ctrl_loop};
+          main_ctrl_loop,
+          *dependencies.cu_up_cfg};
 }
 
 cu_up::cu_up(const cu_up_config& config_, const cu_up_dependencies& dependencies) :
@@ -135,6 +136,7 @@ if (cfg.use_plain_ip) {
   // Connect adapters
   plain_ip_->connect_rx_notifier(*plain_ip_ul_adapter_);
   plain_ip_dl_adapter_->connect_plain_ip(*plain_ip_);
+
 
   // Start RX loop
   plain_ip_->start_rx_loop();

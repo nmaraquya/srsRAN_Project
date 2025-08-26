@@ -34,6 +34,8 @@
 #include "srsran/gtpu/gtpu_teid_pool.h"
 #include "srsran/support/rate_limiting/token_bucket.h"
 #include "srsran/support/timers.h"
+#include "adapters/plain_ip_adapter.h"           // Add this
+#include "adapters/plain_ip_sdap_adapter.h"      // Add this
 #include <map>
 
 namespace srsran::srs_cu_up {
@@ -61,7 +63,8 @@ public:
                            task_executor&                                   ue_ul_exec_,
                            task_executor&                                   ue_ctrl_exec_,
                            task_executor&                                   crypto_exec_,
-                           dlt_pcap&                                        gtpu_pcap_);
+                           dlt_pcap&                                        gtpu_pcap_,
+                           const cu_up_config&                              cu_up_cfg_);
 
   pdu_session_setup_result        setup_pdu_session(const e1ap_pdu_session_res_to_setup_item& session) override;
   pdu_session_modification_result modify_pdu_session(const e1ap_pdu_session_res_to_modify_item& session,
@@ -116,6 +119,7 @@ private:
   f1u_cu_up_gateway&                                       f1u_gw;
   ngu_session_manager&                                     ngu_session_mngr;
   std::map<pdu_session_id_t, std::unique_ptr<pdu_session>> pdu_sessions; // key is pdu_session_id
+  const cu_up_config&                                      cu_up_cfg; 
 };
 
 } // namespace srsran::srs_cu_up

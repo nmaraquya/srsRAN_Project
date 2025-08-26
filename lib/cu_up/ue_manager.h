@@ -53,6 +53,7 @@ struct ue_manager_dependencies {
   cu_up_executor_mapper&        exec_pool;
   dlt_pcap&                     gtpu_pcap;
   srslog::basic_logger&         logger;
+  cu_up_config&                 cu_up_cfg;
 };
 
 class ue_manager : public ue_manager_ctrl
@@ -94,6 +95,7 @@ private:
   ue_db_t                       ue_db;
   ue_task_schedulers_t          ue_task_schedulers;
   srslog::basic_logger&         logger;
+  const cu_up_config&          cu_up_cfg_;
 };
 
 } // namespace srs_cu_up

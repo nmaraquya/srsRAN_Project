@@ -12,6 +12,8 @@
 
 namespace srsran {
 namespace srs_cu_up {
+// Forward declaration to avoid circular dependency
+class plain_ip_sdap_ul_adapter;
 
 /// Configuration for plain IP adapter
 struct plain_ip_config {
@@ -35,6 +37,15 @@ public:
   plain_ip_adapter(const plain_ip_config& config, task_executor& ul_executor, task_executor& dl_executor);
   ~plain_ip_adapter();
 
+
+    void set_ul_handler(plain_ip_sdap_ul_adapter& ul_handler) {
+    ul_handler_ = &ul_handler;
+    logger_.info("Plain IP adapter connected to UL handler");
+  }
+  
+  void on_new_ip_packet(byte_buffer pkt);
+
+
   bool init();
   void stop();
   bool send_pdu(byte_buffer pdu);
@@ -56,6 +67,7 @@ private:
   void handle_rx_packets();
   bool configure_interface();
   bool setup_routing();
+  plain_ip_sdap_ul_adapter* ul_handler_ = nullptr;
 
   plain_ip_config config_;
   int fd_{-1};

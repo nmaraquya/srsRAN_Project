@@ -21,6 +21,7 @@
  */
 
 #include "ue_manager.h"
+#include "srsran/cu_up/cu_up_config.h"
 #include "srsran/support/async/execute_on_blocking.h"
 
 using namespace srsran;
@@ -39,7 +40,8 @@ ue_manager::ue_manager(const ue_manager_config& config, const ue_manager_depende
   ctrl_executor(exec_pool.ctrl_executor()),
   gtpu_pcap(dependencies.gtpu_pcap),
   timers(dependencies.timers),
-  logger(dependencies.logger)
+  logger(dependencies.logger),
+  cu_up_cfg_(dependencies.cu_up_cfg)
 {
   // Initialize a ue task schedulers for all UE indexes.
   for (size_t i = 0; i < MAX_NOF_UES; ++i) {
@@ -101,6 +103,7 @@ ue_context* ue_manager::add_ue(const ue_context_cfg& ue_cfg)
                                                                      e1ap,
                                                                      n3_config,
                                                                      test_mode_config,
+                                                                     cu_up_cfg_,
                                                                      std::move(ue_exec_mapper),
                                                                      ue_task_schedulers[new_idx],
                                                                      ue_dl_timer_factory,

@@ -1,5 +1,6 @@
 
 #include "plain_ip_adapter.h"
+#include "plain_ip_sdap_adapter.h"  // Include here, not in header
 #include "srsran/support/error_handling.h"
 #include <fcntl.h>
 #include <net/if.h>
@@ -82,6 +83,22 @@ bool plain_ip_adapter::init()
   return true;
 }
 
+  // Method called when IP packets arrive from network interface
+  void plain_ip_adapter::on_new_ip_packet(byte_buffer pkt) {
+    if (ul_handler_ == nullptr) {
+      logger_.warning("Dropping UL IP packet: UL handler not connected");
+      return;
+    }
+    
+    if (pkt.empty()) {
+      logger_.debug("Dropping empty UL IP packet");
+      return;
+    }
+    
+    // Forward to UL adapter
+    logger_.debug("Forwarding UL IP packet of {} bytes to UL adapter", pkt.length());
+    ul_handler_->on_new_ip_packet(std::move(pkt));
+  }
 void plain_ip_adapter::stop()
 {
   stop_rx_loop();
@@ -185,7 +202,7 @@ void plain_ip_adapter::handle_rx_packets() {
       std::this_thread::sleep_for(std::chrono::microseconds(100));
       continue;
     }
-    std::string dest_ip = extract_dest_ip(pkt); // implement this helper
+    std::string dest_ip = extract_dest_ip(pkt);
     logger_.warning("handle_rx_packets.....", dest_ip);
     auto it = rx_notifiers_.find(dest_ip);
     if (it != rx_notifiers_.end()) {

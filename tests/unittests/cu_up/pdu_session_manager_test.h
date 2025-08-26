@@ -49,7 +49,8 @@ protected:
     n3_allocator     = std::make_unique<dummy_gtpu_teid_pool>();
     f1u_allocator    = std::make_unique<dummy_gtpu_teid_pool>();
     ngu_session_mngr = std::make_unique<dummy_ngu_session_manager>();
-
+    cu_up_config test_cu_up_cfg{};
+    
     // create DUT object
     ue_inactivity_timer = timers_factory.create_timer();
     ue_inactivity_timer.set(std::chrono::milliseconds(10000), [](timer_id_t) {});
@@ -79,7 +80,8 @@ protected:
                                                                  teid_worker,
                                                                  teid_worker,
                                                                  teid_worker,
-                                                                 gtpu_pcap);
+                                                                 gtpu_pcap,
+                                                                 test_cu_up_cfg);
   }
 
   void finish()

@@ -115,6 +115,7 @@ struct cu_up_dependencies {
   e1_connection_client* e1_conn_client = nullptr;
   /// NG-U gateways
   std::vector<gtpu_gateway*> ngu_gws;
+  cu_up_config* cu_up_cfg = nullptr;
 };
 
 } // namespace srs_cu_up

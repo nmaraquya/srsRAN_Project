@@ -46,6 +46,7 @@ protected:
     gtpu_tx_notifier   = std::make_unique<dummy_gtpu_network_gateway_adapter>();
     f1u_gw             = std::make_unique<dummy_f1u_gateway>(f1u_bearer);
     e1ap               = std::make_unique<dummy_e1ap>();
+    cu_up_config test_cu_up_cfg{};
 
     ngu_session_mngr = std::make_unique<dummy_ngu_session_manager>();
 
@@ -65,7 +66,8 @@ protected:
                                                                   *gtpu_f1u_allocator,
                                                                   *cu_up_exec_mapper,
                                                                   gtpu_pcap,
-                                                                  test_logger});
+                                                                  test_logger,
+                                                                  test_cu_up_cfg});
   }
 
   void TearDown() override

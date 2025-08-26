@@ -41,10 +41,10 @@ pdu_session_manager_impl::pdu_session_manager_impl(ue_index_t                   
                                                    const cu_up_test_mode_config&                    test_mode_config_,
                                                    cu_up_ue_logger&                                 logger_,
                                                    uint64_t                                         ue_dl_ambr,
-                                                   unique_timer&        ue_inactivity_timer_,
-                                                   timer_factory        ue_dl_timer_factory_,
-                                                   timer_factory        ue_ul_timer_factory_,
-                                                   timer_factory        ue_ctrl_timer_factory_,
+                                                   unique_timer&                                    ue_inactivity_timer_,
+                                                   timer_factory                                    ue_dl_timer_factory_,
+                                                   timer_factory                                    ue_ul_timer_factory_,
+                                                   timer_factory                                    ue_ctrl_timer_factory_,
                                                    f1u_cu_up_gateway&   f1u_gw_,
                                                    ngu_session_manager& ngu_session_mngr_,
                                                    gtpu_teid_pool&      n3_teid_allocator_,
@@ -54,7 +54,8 @@ pdu_session_manager_impl::pdu_session_manager_impl(ue_index_t                   
                                                    task_executor&       ue_ul_exec_,
                                                    task_executor&       ue_ctrl_exec_,
                                                    task_executor&       crypto_exec_,
-                                                   dlt_pcap&            gtpu_pcap_) :
+                                                   dlt_pcap&            gtpu_pcap_,
+                                                   const cu_up_config&                              cu_up_cfg_) :
   ue_index(ue_index_),
   qos_cfg(std::move(qos_cfg_)),
   security_info(security_info_),
@@ -74,7 +75,8 @@ pdu_session_manager_impl::pdu_session_manager_impl(ue_index_t                   
   crypto_exec(crypto_exec_),
   gtpu_pcap(gtpu_pcap_),
   f1u_gw(f1u_gw_),
-  ngu_session_mngr(ngu_session_mngr_)
+  ngu_session_mngr(ngu_session_mngr_),
+  cu_up_cfg(cu_up_cfg_)      
 {
   token_bucket_config ue_ambr_config =
       generate_token_bucket_config(ue_dl_ambr, ue_dl_ambr, timer_duration(100), ue_ctrl_timer_factory);
@@ -151,12 +153,56 @@ pdu_session_setup_result pdu_session_manager_impl::setup_pdu_session(const e1ap_
   new_session->gtpu                    = create_gtpu_tunnel_ngu(msg);
 
 // After SDAP entity creation
-new_session->plain_ip_ul_adapter = std::make_unique<plain_ip_sdap_ul_adapter>();
-new_session->plain_ip_ul_adapter->connect_sdap(new_session->sdap->get_sdap_tx_sdu_handler());
-  // Connect adapters
+//new_session->plain_ip_ul_adapter = std::make_unique<plain_ip_sdap_ul_adapter>();
+//new_session->plain_ip_ul_adapter->connect_sdap(new_session->sdap->get_sdap_tx_sdu_handler());
+//new_session->plain_ip_dl_adapter = std::make_unique<plain_ip_sdap_dl_adapter>();
+//new_session->plain_ip_dl_adapter->connect_sdap(new_session->sdap->get_sdap_tx_sdu_handler());
+//new_session->sdap_to_gtpu_adapter->connect_plain_ip_dl(*new_session->plain_ip_ul_adapter);
+
+////ul
+//new_session->plain_ip_ul_adapter = std::make_unique<plain_ip_sdap_ul_adapter>();
+//new_session->plain_ip_ul_adapter->connect_plain_ip(new_session->plain_ip_ul_adapter->get_plain_ip_tx_sdu_handler());
+////dl
+//new_session->plain_ip_dl_adapter = std::make_unique<plain_ip_sdap_dl_adapter>();
+//new_session->plain_ip_dl_adapter->connect_sdap(new_session->sdap->get_sdap_tx_sdu_handler());
+////new_session->sdap_to_gtpu_adapter->connect_plain_ip_dl(*new_session->plain_ip_ul_adapter);
+
+
+
+// CREATE PLAIN IP ADAPTERS (only if enabled):
+if (cu_up_cfg.use_plain_ip) {
+  
+// CREATE PLAIN IP ADAPTERS:
+// 1. Create main Plain IP adapter (network interface)
+plain_ip_config ip_config;
+ip_config.interface_name = "tun0";
+ip_config.ip_address = "192.168.1.1";
+ip_config.netmask = "255.255.255.0";
+new_session->plain_ip_adapter_ = std::make_unique<plain_ip_adapter>(ip_config, ue_ul_exec, ue_dl_exec);
+
+// 2. Create SDAP bridge adapters
+new_session->plain_ip_ul_adapter_ = std::make_unique<plain_ip_sdap_ul_adapter>();
+new_session->plain_ip_dl_adapter_ = std::make_unique<plain_ip_sdap_dl_adapter>();
+
+// CONNECT UL PATH: Network → Plain IP → UL Adapter → SDAP
+new_session->plain_ip_ul_adapter_->connect_sdap(new_session->sdap->get_sdap_tx_sdu_handler());
+//new_session->plain_ip_adapter_->set_ul_handler(*new_session->plain_ip_ul_adapter_);
+new_session->plain_ip_adapter_->connect_rx_notifier(*new_session->plain_ip_ul_adapter_);
+// CONNECT DL PATH: SDAP → GTPU Adapter → DL Adapter → Plain IP → Network
+new_session->plain_ip_dl_adapter_->connect_plain_ip(*new_session->plain_ip_adapter_);
+new_session->sdap_to_gtpu_adapter.connect_plain_ip_dl(*new_session->plain_ip_dl_adapter_);
+
+}else{
+// Connect adapters
+//ul
   new_session->sdap_to_gtpu_adapter.connect_gtpu(*new_session->gtpu->get_tx_lower_layer_interface());
+}
+
+//dl
   new_session->gtpu_to_sdap_adapter.connect_sdap(new_session->sdap->get_sdap_tx_sdu_handler());
   new_session->gtpu_to_udp_adapter.connect_network_gateway(n3_gw);
+
+
   
 
   // Register tunnel at demux

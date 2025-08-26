@@ -52,6 +52,7 @@ struct cu_up_manager_impl_dependencies {
   timer_manager&             timers;
   dlt_pcap&                  gtpu_pcap;
   fifo_async_task_scheduler& cu_up_task_scheduler;
+  cu_up_config&                 cu_up_cfg;
 };
 
 class cu_up_manager_impl final : public cu_up_manager

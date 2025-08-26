@@ -57,6 +57,7 @@ public:
              e1ap_control_message_handler&       e1ap_,
              const n3_interface_config&          n3_config_,
              const cu_up_test_mode_config&       test_mode_config_,
+             const cu_up_config&                 cu_up_cfg, 
              std::unique_ptr<ue_executor_mapper> ue_exec_mapper_,
              fifo_async_task_scheduler&          task_sched_,
              timer_factory                       ue_dl_timer_factory_,
@@ -73,6 +74,7 @@ public:
     index(index_),
     cfg(std::move(cfg_)),
     logger("CU-UP", {index_}),
+    cu_up_cfg_(cu_up_cfg),
     e1ap(e1ap_),
     pdu_session_manager(index,
                         cfg.qos,
@@ -94,7 +96,8 @@ public:
                         ue_exec_mapper->ul_pdu_executor(),
                         ue_exec_mapper->ctrl_executor(),
                         ue_exec_mapper->crypto_executor(),
-                        gtpu_pcap),
+                        gtpu_pcap,
+                        cu_up_cfg),
     ue_dl_timer_factory(ue_dl_timer_factory_),
     ue_ul_timer_factory(ue_ul_timer_factory_),
     ue_ctrl_timer_factory(ue_ctrl_timer_factory_)
@@ -184,6 +187,7 @@ private:
   ue_index_t      index;
   ue_context_cfg  cfg;
   cu_up_ue_logger logger;
+  cu_up_config    cu_up_cfg_;
 
   e1ap_control_message_handler& e1ap;
   pdu_session_manager_impl      pdu_session_manager;

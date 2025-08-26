@@ -38,7 +38,9 @@ public:
   sdap_gtpu_adapter()  = default;
   ~sdap_gtpu_adapter() = default;
 
-  void connect_gtpu(gtpu_tunnel_ngu_tx_lower_layer_interface& gtpu_handler_) { gtpu_handler = &gtpu_handler_; }
+  void connect_gtpu(gtpu_tunnel_ngu_tx_lower_layer_interface& gtpu_handler_) { 
+    gtpu_handler = &gtpu_handler_; 
+  }
     // Add Plain IP connection
   void connect_plain_ip_dl(plain_ip_sdap_dl_adapter& plain_ip_dl_) { 
     plain_ip_dl_adapter = &plain_ip_dl_; 
@@ -63,7 +65,7 @@ public:
 private:
   gtpu_tunnel_ngu_tx_lower_layer_interface* gtpu_handler = nullptr;
   plain_ip_sdap_dl_adapter* plain_ip_dl_adapter = nullptr;
-  bool use_plain_ip = true;
+  bool use_plain_ip = false;
 };
 
 class sdap_pdcp_adapter : public sdap_tx_pdu_notifier
