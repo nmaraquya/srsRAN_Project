@@ -152,21 +152,12 @@ pdu_session_setup_result pdu_session_manager_impl::setup_pdu_session(const e1ap_
   msg.ue_ctrl_timer_factory            = ue_ctrl_timer_factory;
   new_session->gtpu                    = create_gtpu_tunnel_ngu(msg);
 
-// After SDAP entity creation
-//new_session->plain_ip_ul_adapter = std::make_unique<plain_ip_sdap_ul_adapter>();
-//new_session->plain_ip_ul_adapter->connect_sdap(new_session->sdap->get_sdap_tx_sdu_handler());
-//new_session->plain_ip_dl_adapter = std::make_unique<plain_ip_sdap_dl_adapter>();
-//new_session->plain_ip_dl_adapter->connect_sdap(new_session->sdap->get_sdap_tx_sdu_handler());
-//new_session->sdap_to_gtpu_adapter->connect_plain_ip_dl(*new_session->plain_ip_ul_adapter);
 
-////ul
-//new_session->plain_ip_ul_adapter = std::make_unique<plain_ip_sdap_ul_adapter>();
-//new_session->plain_ip_ul_adapter->connect_plain_ip(new_session->plain_ip_ul_adapter->get_plain_ip_tx_sdu_handler());
-////dl
-//new_session->plain_ip_dl_adapter = std::make_unique<plain_ip_sdap_dl_adapter>();
-//new_session->plain_ip_dl_adapter->connect_sdap(new_session->sdap->get_sdap_tx_sdu_handler());
-////new_session->sdap_to_gtpu_adapter->connect_plain_ip_dl(*new_session->plain_ip_ul_adapter);
 
+    logger.log_error(
+        "checking usage of cu_up_cfg");
+    logger.log_error(
+        "cu_up_cfg.use_plain_ip is {}", cu_up_cfg.use_plain_ip);
 
 
 // CREATE PLAIN IP ADAPTERS (only if enabled):
@@ -175,6 +166,10 @@ if (cu_up_cfg.use_plain_ip) {
 // CREATE PLAIN IP ADAPTERS:
 // 1. Create main Plain IP adapter (network interface)
 plain_ip_config ip_config;
+    logger.log_error(
+        "checking usage of plain_ip_config");
+    logger.log_error(
+        "ip_config.interface_name is {}",ip_config.interface_name);
 ip_config.interface_name = "tun0";
 ip_config.ip_address = "192.168.1.1";
 ip_config.netmask = "255.255.255.0";
