@@ -39,6 +39,7 @@ namespace srs_cu_up {
 struct ue_manager_config {
   const n3_interface_config&    n3_config;
   const cu_up_test_mode_config& test_mode_config;
+  const cu_up_config& cu_up_cfg;
 };
 
 /// UE manager dependencies.
@@ -82,6 +83,7 @@ private:
 
   const n3_interface_config&    n3_config;
   const cu_up_test_mode_config& test_mode_config;
+  const cu_up_config&          cu_up_cfg_;
   e1ap_control_message_handler& e1ap;
   f1u_cu_up_gateway&            f1u_gw;
   ngu_session_manager&          ngu_session_mngr;
@@ -95,7 +97,6 @@ private:
   ue_db_t                       ue_db;
   ue_task_schedulers_t          ue_task_schedulers;
   srslog::basic_logger&         logger;
-  const cu_up_config&          cu_up_cfg_;
 };
 
 } // namespace srs_cu_up

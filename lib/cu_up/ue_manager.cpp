@@ -30,6 +30,7 @@ using namespace srs_cu_up;
 ue_manager::ue_manager(const ue_manager_config& config, const ue_manager_dependencies& dependencies) :
   n3_config(config.n3_config),
   test_mode_config(config.test_mode_config),
+  cu_up_cfg_(config.cu_up_cfg),
   e1ap(dependencies.e1ap),
   f1u_gw(dependencies.f1u_gw),
   ngu_session_mngr(dependencies.ngu_session_mngr),
@@ -40,8 +41,7 @@ ue_manager::ue_manager(const ue_manager_config& config, const ue_manager_depende
   ctrl_executor(exec_pool.ctrl_executor()),
   gtpu_pcap(dependencies.gtpu_pcap),
   timers(dependencies.timers),
-  logger(dependencies.logger),
-  cu_up_cfg_(dependencies.cu_up_cfg)
+  logger(dependencies.logger)
 {
   // Initialize a ue task schedulers for all UE indexes.
   for (size_t i = 0; i < MAX_NOF_UES; ++i) {
@@ -76,8 +76,6 @@ ue_context* ue_manager::find_ue(ue_index_t ue_index)
 
 ue_context* ue_manager::add_ue(const ue_context_cfg& ue_cfg)
 {
-  logger.error(" ue_manager::add_ue.");
-  logger.error("add_ue called, cu_up_cfg_ address: {}", static_cast<const void*>(&cu_up_cfg_));
   if (ue_db.size() >= MAX_NOF_UES) {
     logger.error("Can't add new UE. Max number of UEs reached.");
     return nullptr;
@@ -105,7 +103,7 @@ ue_context* ue_manager::add_ue(const ue_context_cfg& ue_cfg)
                                                                      e1ap,
                                                                      n3_config,
                                                                      test_mode_config,
-                                                                     cu_up_cfg_,
+                                                                     cu_up_cfg_, 
                                                                      std::move(ue_exec_mapper),
                                                                      ue_task_schedulers[new_idx],
                                                                      ue_dl_timer_factory,
