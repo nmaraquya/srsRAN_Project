@@ -186,12 +186,13 @@ new_session->plain_ip_adapter_->connect_rx_notifier(*new_session->plain_ip_ul_ad
 // CONNECT DL PATH: SDAP → GTPU Adapter → DL Adapter → Plain IP → Network
 new_session->plain_ip_dl_adapter_->connect_plain_ip(*new_session->plain_ip_adapter_);
 new_session->sdap_to_gtpu_adapter.connect_plain_ip_dl(*new_session->plain_ip_dl_adapter_);
-
-}else{
-// Connect adapters
-//ul
+    }
+//}else{
+//// Connect adapters
+////ul
+//  new_session->sdap_to_gtpu_adapter.connect_gtpu(*new_session->gtpu->get_tx_lower_layer_interface());
+//}
   new_session->sdap_to_gtpu_adapter.connect_gtpu(*new_session->gtpu->get_tx_lower_layer_interface());
-}
 
 //dl
   new_session->gtpu_to_sdap_adapter.connect_sdap(new_session->sdap->get_sdap_tx_sdu_handler());
