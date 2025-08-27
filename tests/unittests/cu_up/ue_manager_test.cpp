@@ -57,20 +57,6 @@ protected:
 
     test_cu_up_cfg.use_plain_ip = false;  // Disable for unit tests
     // create DUT object
-    /*
-    ue_mng = std::make_unique<ue_manager>(ue_manager_config{n3_config, test_mode_config},
-                                          ue_manager_dependencies{*e1ap,
-                                                                  timers,
-                                                                  *f1u_gw,
-                                                                  *ngu_session_mngr,
-                                                                  *gtpu_rx_demux,
-                                                                  *gtpu_n3_allocator,
-                                                                  *gtpu_f1u_allocator,
-                                                                  *cu_up_exec_mapper,
-                                                                  gtpu_pcap,
-                                                                  test_logger,
-                                                                  test_cu_up_cfg});
-    */
     ue_mng = std::make_unique<ue_manager>(ue_manager_config{n3_config, test_mode_config, test_cu_up_cfg},
                                           ue_manager_dependencies{*e1ap,
                                                                   timers,
@@ -81,8 +67,7 @@ protected:
                                                                   *gtpu_f1u_allocator,
                                                                   *cu_up_exec_mapper,
                                                                   gtpu_pcap,
-                                                                  test_logger,
-                                                                  test_cu_up_cfg});
+                                                                  test_logger});
   }
 
   void TearDown() override

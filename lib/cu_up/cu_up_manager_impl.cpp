@@ -50,7 +50,8 @@ static ue_manager_dependencies generate_ue_manager_dependencies(const cu_up_mana
           dependencies.exec_mapper,
           dependencies.gtpu_pcap,
           logger,
-          dependencies.cu_up_cfg};
+        //  dependencies.cu_up_cfg
+        };
 }
 
 cu_up_manager_impl::cu_up_manager_impl(const cu_up_manager_impl_config&       config,

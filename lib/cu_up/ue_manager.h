@@ -29,6 +29,7 @@
 #include "srsran/gtpu/gtpu_teid_pool.h"
 #include "srsran/support/async/fifo_async_task_scheduler.h"
 #include "srsran/support/timers.h"
+#include "srsran/cu_up/cu_up_config.h"
 #include <unordered_map>
 
 namespace srsran {
@@ -54,7 +55,7 @@ struct ue_manager_dependencies {
   cu_up_executor_mapper&        exec_pool;
   dlt_pcap&                     gtpu_pcap;
   srslog::basic_logger&         logger;
-  cu_up_config&                 cu_up_cfg;
+//  cu_up_config&                 cu_up_cfg;
 };
 
 class ue_manager : public ue_manager_ctrl

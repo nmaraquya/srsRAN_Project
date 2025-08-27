@@ -102,6 +102,10 @@ public:
     ue_ul_timer_factory(ue_ul_timer_factory_),
     ue_ctrl_timer_factory(ue_ctrl_timer_factory_)
   {
+
+      logger.log_debug("Creating ue_context for UE {}",static_cast<unsigned>(index));
+      logger.log_debug("cu_up_cfg.use_plain_ip: {}", cu_up_cfg_.use_plain_ip);
+
     if (cfg.activity_level == activity_notification_level_t::ue) {
       if (not cfg.ue_inactivity_timeout.has_value()) {
         report_error(
