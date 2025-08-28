@@ -55,7 +55,7 @@ struct ue_manager_dependencies {
   cu_up_executor_mapper&        exec_pool;
   dlt_pcap&                     gtpu_pcap;
   srslog::basic_logger&         logger;
-//  cu_up_config&                 cu_up_cfg;
+  cu_up_config&                 cu_up_cfg;
 };
 
 class ue_manager : public ue_manager_ctrl

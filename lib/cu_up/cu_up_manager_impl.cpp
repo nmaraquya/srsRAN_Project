@@ -50,7 +50,7 @@ static ue_manager_dependencies generate_ue_manager_dependencies(const cu_up_mana
           dependencies.exec_mapper,
           dependencies.gtpu_pcap,
           logger,
-        //  dependencies.cu_up_cfg
+          dependencies.cu_up_cfg
         };
 }
 
@@ -87,7 +87,7 @@ void cu_up_manager_impl::schedule_ue_async_task(ue_index_t ue_index, async_task<
 e1ap_bearer_context_setup_response
 cu_up_manager_impl::handle_bearer_context_setup_request(const e1ap_bearer_context_setup_request& msg)
 {
-    logger.debug("PIP cu_up_manager_impl::handle_bearer_context_setup_request(const e1ap_bearer_context_setup_request& msg)");
+    
   e1ap_bearer_context_setup_response response = {};
   response.ue_index                           = INVALID_UE_INDEX;
   response.success                            = false;
