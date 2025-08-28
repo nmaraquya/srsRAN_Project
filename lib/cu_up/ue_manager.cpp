@@ -76,6 +76,8 @@ ue_context* ue_manager::find_ue(ue_index_t ue_index)
 
 ue_context* ue_manager::add_ue(const ue_context_cfg& ue_cfg)
 {
+  logger.debug("ue_manager.cpp ue_context* ue_manager::add_ue(const ue_context_cfg& ue_cfg)");
+
   if (ue_db.size() >= MAX_NOF_UES) {
     logger.error("Can't add new UE. Max number of UEs reached.");
     return nullptr;
