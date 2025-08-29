@@ -106,6 +106,7 @@ ue_context* ue_manager::add_ue(const ue_context_cfg& ue_cfg)
     logger.debug("PIP !0");
 
   // Create UE objectlogger.debug("cu_up_cfg_ address: {}", static_cast<const void*>(&cu_up_cfg_));
+logger.debug("PIP !0 cu_up_cfg_ address: {}", static_cast<const void*>(&cu_up_cfg_));
 logger.debug("PIP !0 e1ap address: {}", static_cast<void*>(&e1ap));
 logger.debug("PIP !0 n3_config address: {}", static_cast<const void*>(&n3_config));
 logger.debug("PIP !0 test_mode_config address: {}", static_cast<const void*>(&test_mode_config));
