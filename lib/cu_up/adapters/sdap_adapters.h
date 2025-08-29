@@ -51,10 +51,12 @@ public:
   {
 //    srsran_assert(gtpu_handler != nullptr, "GTPU handler must not be nullptr");
 //    gtpu_handler->handle_sdu(std::move(sdu), qfi);
+      srsran_assert(plain_ip_dl_adapter != nullptr, "PLAIN IP handler must not be nullptr");
+      plain_ip_dl_adapter->on_new_sdu(std::move(sdu), qfi);
     if (use_plain_ip) {
       // Route through Plain IP instead of GTP-U
       srsran_assert(plain_ip_dl_adapter != nullptr, "PLAIN IP handler must not be nullptr");
-      plain_ip_dl_adapter->on_new_sdu(std::move(sdu), qfi);
+      //plain_ip_dl_adapter->on_new_sdu(std::move(sdu), qfi);
     } else {
       // Original GTP-U path
       srsran_assert(gtpu_handler != nullptr, "GTPU handler must not be nullptr");

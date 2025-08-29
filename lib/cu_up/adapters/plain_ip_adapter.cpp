@@ -167,7 +167,8 @@ byte_buffer plain_ip_adapter::receive_pdu()
 }
 
 void plain_ip_adapter::register_rx_notifier(const std::string& ue_ip, plain_ip_rx_data_notifier& notifier) {
-    rx_notifiers_[ue_ip] = &notifier;
+  logger_.info("Registering RX notifier for UE IP: {}", ue_ip);
+  rx_notifiers_[ue_ip] = &notifier;
 }
 void plain_ip_adapter::unregister_rx_notifier(const std::string& ue_ip) {
     rx_notifiers_.erase(ue_ip);
