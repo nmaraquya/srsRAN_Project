@@ -105,7 +105,16 @@ ue_context* ue_manager::add_ue(const ue_context_cfg& ue_cfg)
   timer_factory ue_ctrl_timer_factory = {timers, ue_exec_mapper->ctrl_executor()};
     logger.debug("PIP !0");
 
-  // Create UE object
+  // Create UE objectlogger.debug("cu_up_cfg_ address: {}", static_cast<const void*>(&cu_up_cfg_));
+logger.debug("PIP !0 e1ap address: {}", static_cast<void*>(&e1ap));
+logger.debug("PIP !0 n3_config address: {}", static_cast<const void*>(&n3_config));
+logger.debug("PIP !0 test_mode_config address: {}", static_cast<const void*>(&test_mode_config));
+logger.debug("PIP !0 f1u_gw address: {}", static_cast<void*>(&f1u_gw));
+logger.debug("PIP !0 ngu_session_mngr address: {}", static_cast<void*>(&ngu_session_mngr));
+logger.debug("PIP !0 gtpu_rx_demux address: {}", static_cast<void*>(&gtpu_rx_demux));
+logger.debug("PIP !0 n3_teid_allocator address: {}", static_cast<void*>(&n3_teid_allocator));
+logger.debug("PIP !0 f1u_teid_allocator address: {}", static_cast<void*>(&f1u_teid_allocator));
+logger.debug("PIP !0 gtpu_pcap address: {}", static_cast<void*>(&gtpu_pcap));
   std::unique_ptr<ue_context> new_ctx = std::make_unique<ue_context>(new_idx,
                                                                      ue_cfg,
                                                                      e1ap,
