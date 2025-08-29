@@ -191,7 +191,8 @@ private:
   ue_index_t      index;
   ue_context_cfg  cfg;
   cu_up_ue_logger logger;
-  cu_up_config    cu_up_cfg_;
+//  cu_up_config    cu_up_cfg_;
+  const cu_up_config& cu_up_cfg_;
 
   e1ap_control_message_handler& e1ap;
   pdu_session_manager_impl      pdu_session_manager;
