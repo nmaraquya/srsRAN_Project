@@ -76,28 +76,34 @@ ue_context* ue_manager::find_ue(ue_index_t ue_index)
 
 ue_context* ue_manager::add_ue(const ue_context_cfg& ue_cfg)
 {
-  logger.debug("ue_manager.cpp ue_context* ue_manager::add_ue(const ue_context_cfg& ue_cfg)");
+  logger.debug("PIP ue_manager.cpp ue_context* ue_manager::add_ue(const ue_context_cfg& ue_cfg)");
+
+    logger.debug("PIP !0");
 
   if (ue_db.size() >= MAX_NOF_UES) {
     logger.error("Can't add new UE. Max number of UEs reached.");
     return nullptr;
   }
+    logger.debug("PIP !0");
 
   ue_index_t new_idx = get_next_ue_index();
   if (new_idx == INVALID_UE_INDEX) {
     logger.error("No free ue_index available");
     return nullptr;
   }
+    logger.debug("PIP !0");
 
   // Create UE executors
   // TODO, these should be created within the same function, so that UL, DL and CTRL executors
   // can point to the same executor.
   std::unique_ptr<ue_executor_mapper> ue_exec_mapper = exec_pool.create_ue_executor_mapper();
+    logger.debug("PIP !0");
 
   // Create executor-specific timer factories
   timer_factory ue_dl_timer_factory   = {timers, ue_exec_mapper->dl_pdu_executor()};
   timer_factory ue_ul_timer_factory   = {timers, ue_exec_mapper->ul_pdu_executor()};
   timer_factory ue_ctrl_timer_factory = {timers, ue_exec_mapper->ctrl_executor()};
+    logger.debug("PIP !0");
 
   // Create UE object
   std::unique_ptr<ue_context> new_ctx = std::make_unique<ue_context>(new_idx,
@@ -118,8 +124,10 @@ ue_context* ue_manager::add_ue(const ue_context_cfg& ue_cfg)
                                                                      gtpu_rx_demux,
                                                                      gtpu_pcap);
 
+    logger.debug("PIP !0");
   // add to DB
   ue_db.emplace(new_idx, std::move(new_ctx));
+    logger.debug("PIP !0");
   return ue_db[new_idx].get();
 }
 
