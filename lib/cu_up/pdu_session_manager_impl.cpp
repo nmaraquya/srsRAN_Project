@@ -54,8 +54,10 @@ pdu_session_manager_impl::pdu_session_manager_impl(ue_index_t                   
                                                    task_executor&       ue_ul_exec_,
                                                    task_executor&       ue_ctrl_exec_,
                                                    task_executor&       crypto_exec_,
-                                                   dlt_pcap&            gtpu_pcap_,
-                                                   const cu_up_config&                              cu_up_cfg_) :
+                                                   dlt_pcap&            gtpu_pcap_
+                                                   //,
+                                                   //const cu_up_config&                              cu_up_cfg_
+                                                  ) :
   ue_index(ue_index_),
   qos_cfg(std::move(qos_cfg_)),
   security_info(security_info_),
@@ -75,8 +77,9 @@ pdu_session_manager_impl::pdu_session_manager_impl(ue_index_t                   
   crypto_exec(crypto_exec_),
   gtpu_pcap(gtpu_pcap_),
   f1u_gw(f1u_gw_),
-  ngu_session_mngr(ngu_session_mngr_),
-  cu_up_cfg(cu_up_cfg_)      
+  ngu_session_mngr(ngu_session_mngr_)
+  //,
+  //cu_up_cfg(cu_up_cfg_)      
 {
   token_bucket_config ue_ambr_config =
       generate_token_bucket_config(ue_dl_ambr, ue_dl_ambr, timer_duration(100), ue_ctrl_timer_factory);
@@ -156,12 +159,13 @@ pdu_session_setup_result pdu_session_manager_impl::setup_pdu_session(const e1ap_
 
     logger.log_error(
         "checking usage of cu_up_cfg");
-    logger.log_error(
-        "cu_up_cfg.use_plain_ip is {}", cu_up_cfg.use_plain_ip);
+//    logger.log_error(
+//        "cu_up_cfg.use_plain_ip is {}", cu_up_cfg.use_plain_ip);
 
 
 // CREATE PLAIN IP ADAPTERS (only if enabled):
-if (cu_up_cfg.use_plain_ip) {
+bool use_plain_ip=true;
+if (use_plain_ip==true) {
   
 // CREATE PLAIN IP ADAPTERS:
 // 1. Create main Plain IP adapter (network interface)

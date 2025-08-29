@@ -56,7 +56,7 @@ protected:
     // Create UE cfg
     ue_cfg = {security::sec_as_config{}, activity_notification_level_t::ue, std::chrono::seconds(0), {}, 1000000000};
 
-    test_cu_up_cfg.use_plain_ip = true;  // Disable for unit tests
+//    test_cu_up_cfg.use_plain_ip = true;  // Disable for unit tests
     // create DUT object
     ue_mng = std::make_unique<ue_manager>(ue_manager_config{n3_config, test_mode_config, test_cu_up_cfg},
                                           ue_manager_dependencies{*e1ap,
@@ -71,7 +71,7 @@ protected:
                                                                   test_logger,
                                                                   test_cu_up_cfg});
   }
-
+ 
   void TearDown() override
   {
     // flush logger after each test

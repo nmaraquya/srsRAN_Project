@@ -114,9 +114,11 @@ cu_up::cu_up(const cu_up_config& config_, const cu_up_dependencies& dependencies
   gw_data_gtpu_demux_adapter.connect_gtpu_demux(*ngu_demux);
    
 // Plain IP initialization
-if (cfg.use_plain_ip) {
+//if (cfg.use_plain_ip) {
+bool use_plain_ip=true;
+if (use_plain_ip==true) {
   
-  logger.info("plain_ip initialization started");
+  logger.info("PLAIN_IP PLAIN IP PLAIN-IP initialization started");
   plain_ip_config plain_ip_cfg;
   plain_ip_cfg.interface_name = cfg.n3_cfg.plain_ip_interface_name.value_or("srs_tun0");
   plain_ip_cfg.ip_address = cfg.n3_cfg.plain_ip_address.value_or("192.168.1.1");

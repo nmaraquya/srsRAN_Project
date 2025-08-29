@@ -77,6 +77,7 @@ static pdcp_metrics_notifier* build_pdcp_metrics_config(std::vector<app_services
 
 o_cu_up_unit srsran::build_o_cu_up(const o_cu_up_unit_config& unit_cfg, const o_cu_up_unit_dependencies& dependencies)
 {
+  // PIP error
   o_cu_up_unit              ocu_unit = {};
   srs_cu_up::o_cu_up_config config;
   config.cu_up_cfg     = generate_cu_up_config(unit_cfg.cu_up_cfg);

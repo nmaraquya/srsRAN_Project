@@ -84,7 +84,7 @@ private:
 
   const n3_interface_config&    n3_config;
   const cu_up_test_mode_config& test_mode_config;
-  const cu_up_config&          cu_up_cfg_;
+//  const cu_up_config&          cu_up_cfg_;
   e1ap_control_message_handler& e1ap;
   f1u_cu_up_gateway&            f1u_gw;
   ngu_session_manager&          ngu_session_mngr;

@@ -30,7 +30,7 @@ using namespace srs_cu_up;
 ue_manager::ue_manager(const ue_manager_config& config, const ue_manager_dependencies& dependencies) :
   n3_config(config.n3_config),
   test_mode_config(config.test_mode_config),
-  cu_up_cfg_(config.cu_up_cfg),
+//  cu_up_cfg_(config.cu_up_cfg),
   e1ap(dependencies.e1ap),
   f1u_gw(dependencies.f1u_gw),
   ngu_session_mngr(dependencies.ngu_session_mngr),
@@ -105,8 +105,10 @@ ue_context* ue_manager::add_ue(const ue_context_cfg& ue_cfg)
   timer_factory ue_ctrl_timer_factory = {timers, ue_exec_mapper->ctrl_executor()};
     logger.debug("PIP !0");
 
-  // Create UE objectlogger.debug("cu_up_cfg_ address: {}", static_cast<const void*>(&cu_up_cfg_));
-logger.debug("PIP !0 cu_up_cfg_ address: {}", static_cast<const void*>(&cu_up_cfg_));
+  // Create UE object
+
+  // cu_up_cfg_ is 0x0 EMPTY
+//logger.debug("PIP !0 cu_up_cfg_ address: {}", static_cast<const void*>(&cu_up_cfg_));
 logger.debug("PIP !0 e1ap address: {}", static_cast<void*>(&e1ap));
 logger.debug("PIP !0 n3_config address: {}", static_cast<const void*>(&n3_config));
 logger.debug("PIP !0 test_mode_config address: {}", static_cast<const void*>(&test_mode_config));
@@ -121,7 +123,7 @@ logger.debug("PIP !0 gtpu_pcap address: {}", static_cast<void*>(&gtpu_pcap));
                                                                      e1ap,
                                                                      n3_config,
                                                                      test_mode_config,
-                                                                     cu_up_cfg_, 
+                                                                  //   cu_up_cfg_, 
                                                                      std::move(ue_exec_mapper),
                                                                      ue_task_schedulers[new_idx],
                                                                      ue_dl_timer_factory,
