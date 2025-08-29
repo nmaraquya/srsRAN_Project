@@ -187,6 +187,8 @@ new_session->plain_ip_dl_adapter_ = std::make_unique<plain_ip_sdap_dl_adapter>()
 new_session->plain_ip_ul_adapter_->connect_sdap(new_session->sdap->get_sdap_tx_sdu_handler());
 //new_session->plain_ip_adapter_->set_ul_handler(*new_session->plain_ip_ul_adapter_);
 new_session->plain_ip_adapter_->connect_rx_notifier(*new_session->plain_ip_ul_adapter_);
+    logger.log_warning(
+        "PIP !1 checking ip of new ue {}",new_session->ul_tunnel_info.tp_address.to_string());
 new_session->plain_ip_adapter_->register_rx_notifier("192.168.100.10", *new_session->plain_ip_ul_adapter_);
 // CONNECT DL PATH: SDAP → GTPU Adapter → DL Adapter → Plain IP → Network
 new_session->plain_ip_dl_adapter_->connect_plain_ip(*new_session->plain_ip_adapter_);
