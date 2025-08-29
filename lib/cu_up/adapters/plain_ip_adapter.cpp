@@ -188,6 +188,15 @@ std::string plain_ip_adapter::extract_dest_ip(const byte_buffer& pkt) {
     inet_ntop(AF_INET, ip_bytes, ip_str, INET_ADDRSTRLEN);
     return std::string(ip_str);
 }
+
+void plain_ip_adapter::log_all_notifiers() const {
+    std::string notifier_list;
+    for (const auto& entry : rx_notifiers_) {
+        notifier_list += entry.first + " ";
+    }
+    logger_.info("PIP !1 Registered plain IP notifiers: [{}]", notifier_list);
+}
+
 void plain_ip_adapter::handle_rx_packets() {
     
       logger_.warning("entering handle_rx_packets loop");
@@ -202,8 +211,11 @@ void plain_ip_adapter::handle_rx_packets() {
       std::this_thread::sleep_for(std::chrono::microseconds(100));
       continue;
     }
+
+    
     std::string dest_ip = extract_dest_ip(pkt);
     logger_.warning("handle_rx_packets.....", dest_ip);
+    log_all_notifiers();
     auto it = rx_notifiers_.find(dest_ip);
     if (it != rx_notifiers_.end()) {
             ul_executor_.execute([notifier = it->second, pkt = std::move(pkt)]() mutable {

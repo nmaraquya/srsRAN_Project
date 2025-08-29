@@ -51,7 +51,7 @@ public:
   bool send_pdu(byte_buffer pdu);
   void send_pdu_async(byte_buffer pdu);
   byte_buffer receive_pdu();
-
+  void log_all_notifiers() const;
   // Data path integration
   void connect_rx_notifier(plain_ip_rx_data_notifier& notifier);
   void disconnect_rx_notifier();
