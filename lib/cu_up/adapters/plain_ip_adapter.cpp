@@ -168,15 +168,84 @@ byte_buffer plain_ip_adapter::receive_pdu()
 
 void plain_ip_adapter::register_rx_notifier(const std::string& ue_ip, plain_ip_rx_data_notifier& notifier) {
   logger_.info("Registering RX notifier for UE IP: {}", ue_ip);
+
+  std::string hex_dump;
+  for (char c : ue_ip) {
+      hex_dump += fmt::format("{:02x} ", static_cast<unsigned char>(c));
+  }
+  logger_.info("🔵 IP hex dump: {}", hex_dump);
+
   rx_notifiers_[ue_ip] = &notifier;
+
+   logger_.info("🔵 Map size after registration: {}", rx_notifiers_.size());
+   log_all_notifiers(); // Log immediately after registration
+
 }
 void plain_ip_adapter::unregister_rx_notifier(const std::string& ue_ip) {
     rx_notifiers_.erase(ue_ip);
 }
+
+
+
+
 std::string plain_ip_adapter::extract_dest_ip(const byte_buffer& pkt) {
-    if (pkt.length() < 20) {
+      if (pkt.length() < 20) {
+        logger_.warning("⚠️ Packet too short for IP header: {} bytes", pkt.length());
         return "";
     }
+
+    // Try to access the data directly
+    uint8_t ip_bytes[4];
+    size_t copied = 0;
+    
+    // Copy bytes 16-19 (destination IP)
+    for (auto it = pkt.begin(); it != pkt.end() && copied < 20; ++it, ++copied) {
+        if (copied >= 16 && copied < 20) {
+            ip_bytes[copied - 16] = *it;
+        }
+    }
+    
+    if (copied < 20) {
+        logger_.warning("⚠️ Could not read full IP header");
+        return "";
+    }
+    
+    // Convert to string
+    char ip_str[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, ip_bytes, ip_str, INET_ADDRSTRLEN);
+    
+    std::string dest_ip(ip_str);
+    logger_.info("🔍 EXTRACTED destination IP: '{}'", dest_ip);
+    
+    return dest_ip;
+}
+
+/*
+std::string plain_ip_adapter::extract_dest_ip(const byte_buffer& pkt) {
+    if (pkt.length() < 20) {
+        logger_.warning("⚠️ Packet too short for IP header: {} bytes", pkt.length());
+         return "";
+    }
+
+        // Get destination IP from IP header (bytes 16-19)
+    auto slice = pkt.slice(16, 4);
+    std::array<uint8_t, 4> ip_bytes_;
+    std::copy(slice.begin(), slice.end(), ip_bytes_.begin());
+    
+    std::string dest_ip = fmt::format("{}.{}.{}.{}", 
+                                     ip_bytes_[0], ip_bytes_[1], 
+                                     ip_bytes_[2], ip_bytes_[3]);
+    
+    logger_.info("🔍 EXTRACTED destination IP: '{}' (length: {})", dest_ip, dest_ip.length());
+    
+    // Log hex dump
+    std::string hex_dump;
+    for (char c : dest_ip) {
+        hex_dump += fmt::format("{:02x} ", static_cast<unsigned char>(c));
+    }
+    logger_.info("🔍 Extracted IP hex: {}", hex_dump);
+    
+
     // IPv4: bytes 16-19 are destination IP
     uint8_t ip_bytes[4];
     auto it = pkt.begin();
@@ -189,8 +258,26 @@ std::string plain_ip_adapter::extract_dest_ip(const byte_buffer& pkt) {
     inet_ntop(AF_INET, ip_bytes, ip_str, INET_ADDRSTRLEN);
     return std::string(ip_str);
 }
-
+*/
 void plain_ip_adapter::log_all_notifiers() const {
+
+    logger_.info("📋 Current notifiers map (size: {}):", rx_notifiers_.size());
+    if (rx_notifiers_.empty()) {
+        logger_.warning("📋 No notifiers registered!");
+        return;
+    }
+    
+    for (const auto& [ip, notifier] : rx_notifiers_) {
+        logger_.info("📋 IP: '{}' -> notifier: {}", ip, static_cast<const void*>(notifier));
+        
+        // Log hex dump for debugging
+        std::string hex_dump;
+        for (char c : ip) {
+            hex_dump += fmt::format("{:02x} ", static_cast<unsigned char>(c));
+        }
+        logger_.info("📋 IP hex: {}", hex_dump);
+    }
+
     std::string notifier_list;
     for (const auto& entry : rx_notifiers_) {
         notifier_list += entry.first + " ";

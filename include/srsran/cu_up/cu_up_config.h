@@ -95,7 +95,7 @@ struct cu_up_config {
   /// CU-UP statistics report period in seconds.
   std::chrono::seconds statistics_report_period;
   /// Flag to enable/disable plain IP adapter
-//  bool use_plain_ip = true;
+  //  bool use_plain_ip = true;
 
 };
 
