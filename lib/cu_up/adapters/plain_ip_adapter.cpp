@@ -179,14 +179,11 @@ void plain_ip_adapter::register_rx_notifier(const std::string& ue_ip, plain_ip_r
 
    logger_.info("🔵 Map size after registration: {}", rx_notifiers_.size());
    log_all_notifiers(); // Log immediately after registration
-
 }
+
 void plain_ip_adapter::unregister_rx_notifier(const std::string& ue_ip) {
     rx_notifiers_.erase(ue_ip);
 }
-
-
-
 
 std::string plain_ip_adapter::extract_dest_ip(const byte_buffer& pkt) {
       if (pkt.length() < 20) {
