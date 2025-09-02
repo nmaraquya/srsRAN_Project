@@ -63,7 +63,8 @@ public:
                            task_executor&                                   ue_ul_exec_,
                            task_executor&                                   ue_ctrl_exec_,
                            task_executor&                                   crypto_exec_,
-                           dlt_pcap&                                        gtpu_pcap_
+                           dlt_pcap&                                        gtpu_pcap_,
+                           plain_ip_adapter&                                plain_ip_adapter_
                           // ,
                           // const cu_up_config&                              cu_up_cfg_
                           );
@@ -121,7 +122,8 @@ private:
   f1u_cu_up_gateway&                                       f1u_gw;
   ngu_session_manager&                                     ngu_session_mngr;
   std::map<pdu_session_id_t, std::unique_ptr<pdu_session>> pdu_sessions; // key is pdu_session_id
-//  const cu_up_config&                                      cu_up_cfg; 
+  plain_ip_adapter&                                        plain_ip;
+  //  const cu_up_config&                                      cu_up_cfg;
 };
 
 } // namespace srsran::srs_cu_up

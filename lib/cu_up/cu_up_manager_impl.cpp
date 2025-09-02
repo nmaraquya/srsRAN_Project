@@ -55,18 +55,21 @@ static ue_manager_dependencies generate_ue_manager_dependencies(const cu_up_mana
 }
 
 cu_up_manager_impl::cu_up_manager_impl(const cu_up_manager_impl_config&       config,
-                                       const cu_up_manager_impl_dependencies& dependencies) :
+                                       const cu_up_manager_impl_dependencies& dependencies,
+                                      plain_ip_adapter& plain_ip_adapter_) :
   qos(config.qos),
   n3_cfg(config.n3_cfg),
   test_mode_cfg(config.test_mode_cfg),
   ngu_demux(dependencies.ngu_demux),
+  plain_ip(plain_ip_adapter_),
   exec_mapper(dependencies.exec_mapper),
   timers(dependencies.timers),
   cu_up_task_scheduler(dependencies.cu_up_task_scheduler)
 {
   /// > Create UE manager
   ue_mng = std::make_unique<ue_manager>(generate_ue_manager_config(n3_cfg, test_mode_cfg,dependencies.cu_up_cfg),
-                                        generate_ue_manager_dependencies(dependencies, logger));
+                                        generate_ue_manager_dependencies(dependencies, logger),
+                                        plain_ip);
 }
 
 async_task<void> cu_up_manager_impl::stop()

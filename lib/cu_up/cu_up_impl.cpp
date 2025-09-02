@@ -185,7 +185,8 @@ if (use_plain_ip==true) {
   cu_up_mng = std::make_unique<cu_up_manager_impl>(
       generate_cu_up_manager_impl_config(cfg),
       generate_cu_up_manager_impl_dependencies(
-          dependencies, *e1ap, *ngu_demux, *ngu_session_mngr, *n3_teid_allocator, *f1u_teid_allocator, main_ctrl_loop));
+          dependencies, *e1ap, *ngu_demux, *ngu_session_mngr, *n3_teid_allocator, *f1u_teid_allocator, main_ctrl_loop),
+          *plain_ip_);
 
   /// > Connect E1AP to CU-UP manager
   e1ap_cu_up_mng_adapter.connect_cu_up_manager(*cu_up_mng);

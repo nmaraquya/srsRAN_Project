@@ -61,7 +61,8 @@ struct ue_manager_dependencies {
 class ue_manager : public ue_manager_ctrl
 {
 public:
-  explicit ue_manager(const ue_manager_config& config, const ue_manager_dependencies& dependencies);
+  explicit ue_manager(const ue_manager_config& config, const ue_manager_dependencies& dependencies,
+             plain_ip_adapter& plain_ip_adapter_);
 
   using ue_db_t              = std::unordered_map<ue_index_t, std::unique_ptr<ue_context>>;
   using ue_task_schedulers_t = slotted_array<fifo_async_task_scheduler, MAX_NOF_UES>;
@@ -98,6 +99,7 @@ private:
   ue_db_t                       ue_db;
   ue_task_schedulers_t          ue_task_schedulers;
   srslog::basic_logger&         logger;
+  plain_ip_adapter&             plain_ip;
 };
 
 } // namespace srs_cu_up

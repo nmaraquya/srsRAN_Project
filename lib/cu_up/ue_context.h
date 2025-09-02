@@ -57,7 +57,6 @@ public:
              e1ap_control_message_handler&       e1ap_,
              const n3_interface_config&          n3_config_,
              const cu_up_test_mode_config&       test_mode_config_,
-//             const cu_up_config&                 cu_up_cfg, 
              std::unique_ptr<ue_executor_mapper> ue_exec_mapper_,
              fifo_async_task_scheduler&          task_sched_,
              timer_factory                       ue_dl_timer_factory_,
@@ -68,7 +67,8 @@ public:
              gtpu_teid_pool&                     n3_teid_allocator_,
              gtpu_teid_pool&                     f1u_teid_allocator_,
              gtpu_demux_ctrl&                    gtpu_rx_demux_,
-             dlt_pcap&                           gtpu_pcap) :
+             dlt_pcap&                           gtpu_pcap,
+            plain_ip_adapter&                   plain_ip_adapter_) :
     task_sched(task_sched_),
     ue_exec_mapper(std::move(ue_exec_mapper_)),
     index(index_),
@@ -96,7 +96,8 @@ public:
                         ue_exec_mapper->ul_pdu_executor(),
                         ue_exec_mapper->ctrl_executor(),
                         ue_exec_mapper->crypto_executor(),
-                        gtpu_pcap
+                        gtpu_pcap,
+                        plain_ip_adapter_
                         //,
                       //  cu_up_cfg
                       ),

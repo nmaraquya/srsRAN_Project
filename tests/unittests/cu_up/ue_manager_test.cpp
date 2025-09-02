@@ -48,6 +48,7 @@ protected:
     f1u_gw             = std::make_unique<dummy_f1u_gateway>(f1u_bearer);
     e1ap               = std::make_unique<dummy_e1ap>();
     //cu_up_config test_cu_up_cfg_{};
+    plain_ip_adapter dummy_plain_ip_adapter{plain_ip_config{}, worker, worker};
 
     ngu_session_mngr = std::make_unique<dummy_ngu_session_manager>();
 
@@ -69,7 +70,8 @@ protected:
                                                                   *cu_up_exec_mapper,
                                                                   gtpu_pcap,
                                                                   test_logger,
-                                                                  test_cu_up_cfg});
+                                                                  test_cu_up_cfg},
+    dummy_plain_ip_adapter );
   }
  
   void TearDown() override

@@ -27,10 +27,9 @@
 using namespace srsran;
 using namespace srs_cu_up;
 
-ue_manager::ue_manager(const ue_manager_config& config, const ue_manager_dependencies& dependencies) :
+ue_manager::ue_manager(const ue_manager_config& config, const ue_manager_dependencies& dependencies, plain_ip_adapter& plain_ip_adapter_) :
   n3_config(config.n3_config),
   test_mode_config(config.test_mode_config),
-//  cu_up_cfg_(config.cu_up_cfg),
   e1ap(dependencies.e1ap),
   f1u_gw(dependencies.f1u_gw),
   ngu_session_mngr(dependencies.ngu_session_mngr),
@@ -41,7 +40,8 @@ ue_manager::ue_manager(const ue_manager_config& config, const ue_manager_depende
   ctrl_executor(exec_pool.ctrl_executor()),
   gtpu_pcap(dependencies.gtpu_pcap),
   timers(dependencies.timers),
-  logger(dependencies.logger)
+  logger(dependencies.logger),
+  plain_ip(plain_ip_adapter_)
 {
   // Initialize a ue task schedulers for all UE indexes.
   for (size_t i = 0; i < MAX_NOF_UES; ++i) {
@@ -134,7 +134,8 @@ logger.debug("PIP !0 gtpu_pcap address: {}", static_cast<void*>(&gtpu_pcap));
                                                                      n3_teid_allocator,
                                                                      f1u_teid_allocator,
                                                                      gtpu_rx_demux,
-                                                                     gtpu_pcap);
+                                                                     gtpu_pcap,
+                                                                    plain_ip);
 
     logger.debug("PIP !0");
   // add to DB

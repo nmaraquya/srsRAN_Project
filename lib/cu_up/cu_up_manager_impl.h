@@ -58,7 +58,8 @@ struct cu_up_manager_impl_dependencies {
 class cu_up_manager_impl final : public cu_up_manager
 {
 public:
-  cu_up_manager_impl(const cu_up_manager_impl_config& config, const cu_up_manager_impl_dependencies& dependencies);
+  cu_up_manager_impl(const cu_up_manager_impl_config& config, const cu_up_manager_impl_dependencies& dependencies,
+                     plain_ip_adapter& plain_ip_adapter_);
 
   async_task<void> stop() override;
   e1ap_bearer_context_setup_response
@@ -93,6 +94,7 @@ private:
   const n3_interface_config             n3_cfg;
   const cu_up_test_mode_config          test_mode_cfg;
   gtpu_demux&                           ngu_demux;
+  plain_ip_adapter&                     plain_ip;
   cu_up_executor_mapper&                exec_mapper;
   timer_manager&                        timers;
 

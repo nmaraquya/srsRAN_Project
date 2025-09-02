@@ -54,7 +54,8 @@ pdu_session_manager_impl::pdu_session_manager_impl(ue_index_t                   
                                                    task_executor&       ue_ul_exec_,
                                                    task_executor&       ue_ctrl_exec_,
                                                    task_executor&       crypto_exec_,
-                                                   dlt_pcap&            gtpu_pcap_
+                                                   dlt_pcap&            gtpu_pcap_,
+                                                   plain_ip_adapter& plain_ip_adapter_
                                                    //,
                                                    //const cu_up_config&                              cu_up_cfg_
                                                   ) :
@@ -77,7 +78,8 @@ pdu_session_manager_impl::pdu_session_manager_impl(ue_index_t                   
   crypto_exec(crypto_exec_),
   gtpu_pcap(gtpu_pcap_),
   f1u_gw(f1u_gw_),
-  ngu_session_mngr(ngu_session_mngr_)
+  ngu_session_mngr(ngu_session_mngr_),
+  plain_ip(plain_ip_adapter_)
   //,
   //cu_up_cfg(cu_up_cfg_)      
 {
@@ -186,16 +188,27 @@ ip_config.netmask = "255.255.255.0";
 //new_session->plain_ip_dl_adapter_ = std::make_unique<plain_ip_sdap_dl_adapter>();
 
 // CONNECT UL PATH: Network → Plain IP → UL Adapter → SDAP
-new_session->plain_ip_ul_adapter_->connect_sdap(new_session->sdap->get_sdap_tx_sdu_handler());
+//new_session->plain_ip_ul_adapter_->connect_sdap(new_session->sdap->get_sdap_tx_sdu_handler());
 // todo cehck 
 //new_session->plain_ip_adapter_->set_ul_handler(*new_session->plain_ip_ul_adapter_);
 //new_session->plain_ip_adapter_->connect_rx_notifier(*new_session->plain_ip_ul_adapter_);
-    logger.log_warning( "PIP !1 checking ip of new ue {}",new_session->ul_tunnel_info.tp_address.to_string());
-new_session->plain_ip_adapter_->register_rx_notifier("192.168.100.12", *new_session->plain_ip_ul_adapter_);
-new_session->plain_ip_adapter_->log_all_notifiers();
+//    logger.log_warning( "PIP !1 checking ip of new ue {}",new_session->ul_tunnel_info.tp_address.to_string());
+//new_session->plain_ip_adapter_->register_rx_notifier("192.168.100.12", *new_session->plain_ip_ul_adapter_);
+//new_session->plain_ip_adapter_->log_all_notifiers();
 // CONNECT DL PATH: SDAP → GTPU Adapter → DL Adapter → Plain IP → Network
 //new_session->plain_ip_dl_adapter_->connect_plain_ip(*new_session->plain_ip_adapter_);
-new_session->sdap_to_gtpu_adapter.connect_plain_ip_dl(*new_session->plain_ip_dl_adapter_);
+auto plain_ip_ul_adapter = std::make_unique<plain_ip_sdap_ul_adapter>();
+auto plain_ip_dl_adapter = std::make_unique<plain_ip_sdap_dl_adapter>();
+new_session->plain_ip_ul_adapter = std::move(plain_ip_ul_adapter);
+new_session->plain_ip_dl_adapter = std::move(plain_ip_dl_adapter);
+
+new_session->sdap_to_gtpu_adapter.connect_plain_ip_dl(*new_session->plain_ip_dl_adapter);
+new_session->plain_ip_dl_adapter->connect_plain_ip(plain_ip);
+new_session->plain_ip_ul_adapter->connect_sdap(new_session->sdap->get_sdap_tx_sdu_handler());
+
+plain_ip.register_rx_notifier("192.168.100.12", *new_session->plain_ip_ul_adapter);
+plain_ip.log_all_notifiers();
+
     }
 else{
 // Connect adapters

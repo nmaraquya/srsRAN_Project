@@ -79,10 +79,13 @@ struct pdu_session {
   std::unique_ptr<sdap_entity>     sdap;
   std::unique_ptr<gtpu_tunnel_ngu> gtpu;
   // Adapters between SDAP and PLAIN_IP
-  std::unique_ptr<plain_ip_adapter> plain_ip_adapter_;           // Changed name
-  std::unique_ptr<plain_ip_sdap_ul_adapter> plain_ip_ul_adapter_;  // Changed name
-  std::unique_ptr<plain_ip_sdap_dl_adapter> plain_ip_dl_adapter_;  // Changed name
+//  std::unique_ptr<plain_ip_adapter> plain_ip_adapter_;           // Changed name
+  //std::unique_ptr<plain_ip_sdap_ul_adapter> plain_ip_ul_adapter_;  // Changed name
+  //std::unique_ptr<plain_ip_sdap_dl_adapter> plain_ip_dl_adapter_;  // Changed name
   
+  std::unique_ptr<plain_ip_sdap_ul_adapter> plain_ip_ul_adapter;
+  std::unique_ptr<plain_ip_sdap_dl_adapter> plain_ip_dl_adapter;
+
 //  std::unique_ptr<plain_ip_adapter> plain_ip_adapter;
 //  std::unique_ptr<plain_ip_sdap_ul_adapter> plain_ip_ul_adapter; 
 //  std::unique_ptr<plain_ip_sdap_dl_adapter> plain_ip_dl_adapter;
