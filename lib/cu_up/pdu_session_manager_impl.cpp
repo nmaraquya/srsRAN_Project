@@ -166,7 +166,7 @@ pdu_session_setup_result pdu_session_manager_impl::setup_pdu_session(const e1ap_
 // CREATE PLAIN IP ADAPTERS (only if enabled):
 bool use_plain_ip=true;
 if (use_plain_ip==true) {
-  
+  /*
 // CREATE PLAIN IP ADAPTERS:
 // 1. Create main Plain IP adapter (network interface)
 plain_ip_config ip_config;
@@ -177,30 +177,32 @@ plain_ip_config ip_config;
 ip_config.interface_name = "tun0";
 ip_config.ip_address = "192.168.1.1";
 ip_config.netmask = "255.255.255.0";
-new_session->plain_ip_adapter_ = std::make_unique<plain_ip_adapter>(ip_config, ue_ul_exec, ue_dl_exec);
+
+*/
+//new_session->plain_ip_adapter_ = std::make_unique<plain_ip_adapter>(ip_config, ue_ul_exec, ue_dl_exec);
 
 // 2. Create SDAP bridge adapters
-new_session->plain_ip_ul_adapter_ = std::make_unique<plain_ip_sdap_ul_adapter>();
-new_session->plain_ip_dl_adapter_ = std::make_unique<plain_ip_sdap_dl_adapter>();
+//new_session->plain_ip_ul_adapter_ = std::make_unique<plain_ip_sdap_ul_adapter>();
+//new_session->plain_ip_dl_adapter_ = std::make_unique<plain_ip_sdap_dl_adapter>();
 
 // CONNECT UL PATH: Network → Plain IP → UL Adapter → SDAP
 new_session->plain_ip_ul_adapter_->connect_sdap(new_session->sdap->get_sdap_tx_sdu_handler());
 // todo cehck 
-new_session->plain_ip_adapter_->set_ul_handler(*new_session->plain_ip_ul_adapter_);
-new_session->plain_ip_adapter_->connect_rx_notifier(*new_session->plain_ip_ul_adapter_);
+//new_session->plain_ip_adapter_->set_ul_handler(*new_session->plain_ip_ul_adapter_);
+//new_session->plain_ip_adapter_->connect_rx_notifier(*new_session->plain_ip_ul_adapter_);
     logger.log_warning( "PIP !1 checking ip of new ue {}",new_session->ul_tunnel_info.tp_address.to_string());
 new_session->plain_ip_adapter_->register_rx_notifier("192.168.100.12", *new_session->plain_ip_ul_adapter_);
 new_session->plain_ip_adapter_->log_all_notifiers();
 // CONNECT DL PATH: SDAP → GTPU Adapter → DL Adapter → Plain IP → Network
-new_session->plain_ip_dl_adapter_->connect_plain_ip(*new_session->plain_ip_adapter_);
+//new_session->plain_ip_dl_adapter_->connect_plain_ip(*new_session->plain_ip_adapter_);
 new_session->sdap_to_gtpu_adapter.connect_plain_ip_dl(*new_session->plain_ip_dl_adapter_);
     }
-//else{
-//// Connect adapters
-////ul
-//  new_session->sdap_to_gtpu_adapter.connect_gtpu(*new_session->gtpu->get_tx_lower_layer_interface());
-//}
+else{
+// Connect adapters
+//ul
   new_session->sdap_to_gtpu_adapter.connect_gtpu(*new_session->gtpu->get_tx_lower_layer_interface());
+}
+//  new_session->sdap_to_gtpu_adapter.connect_gtpu(*new_session->gtpu->get_tx_lower_layer_interface());
 
 //dl
   new_session->gtpu_to_sdap_adapter.connect_sdap(new_session->sdap->get_sdap_tx_sdu_handler());
