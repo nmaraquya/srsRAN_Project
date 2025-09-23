@@ -76,7 +76,7 @@ void radio_uhd_tx_stream::recv_async_msg()
       // No action needed
       break;
     default:
-      fmt::print(stderr, "Warning: unhandled asynchronous event code {} for stream {}.\n", async_metadata.event_code, stream_id);
+      fmt::print(stderr, "Warning: unhandled asynchronous event code {} for stream {}.\n", static_cast<int>(async_metadata.event_code), stream_id);
       break;
   }
 
