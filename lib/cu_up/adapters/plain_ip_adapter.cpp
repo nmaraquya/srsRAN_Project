@@ -477,7 +477,7 @@ bool plain_ip_adapter::configure_interface()
                config_.interface_name, config_.ip_address, config_.netmask);
   return true;
 }
-
+/*
 bool plain_ip_adapter::setup_routing() {
 
 
@@ -517,7 +517,8 @@ bool plain_ip_adapter::setup_routing() {
 
     return true;
 }
-/*
+*/
+
 bool plain_ip_adapter::setup_routing()
 {
   // This is a simplified routing setup
@@ -534,4 +535,3 @@ bool plain_ip_adapter::setup_routing()
     return false;
   }
 }
-*/
