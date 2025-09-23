@@ -72,6 +72,12 @@ void radio_uhd_tx_stream::recv_async_msg()
     case uhd::async_metadata_t::EVENT_CODE_USER_PAYLOAD:
       event_description.type = radio_notification_handler::event_type::OTHER;
       break;
+    case uhd::async_metadata_t::EVENT_CODE_OK:
+      // No action needed
+      break;
+    default:
+      fmt::print(stderr, "Warning: unhandled asynchronous event code {} for stream {}.\n", async_metadata.event_code, stream_id);
+      break;
   }
 
   // Notify event if it is defined.
