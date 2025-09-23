@@ -18,8 +18,11 @@ class plain_ip_sdap_ul_adapter;
 /// Configuration for plain IP adapter
 struct plain_ip_config {
   std::string interface_name = "srs_tun0";
-  std::string ip_address     = "192.168.1.1";
+  std::string dev_name       = "eth0";
+  std::string ip_address     = "192.168.100.1";
+  std::string subnet         = "192.168.100.0";
   std::string netmask        = "255.255.255.0";
+  std::string netmask_       = "24";
   bool        enable_routing = true;
 };
 
@@ -77,7 +80,7 @@ private:
   task_executor& dl_executor_;
   plain_ip_rx_data_notifier* rx_notifier_ = nullptr;
   std::string extract_dest_ip(const byte_buffer& pkt);
-  
+  std::string extract_src_ip(const byte_buffer& pkt);
   srslog::basic_logger& logger_;
 };
 

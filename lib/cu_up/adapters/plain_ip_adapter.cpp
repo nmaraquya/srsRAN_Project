@@ -282,6 +282,87 @@ void plain_ip_adapter::log_all_notifiers() const {
     logger_.info("PIP !1 Registered plain IP notifiers: [{}]", notifier_list);
 }
 
+std::string plain_ip_adapter::extract_src_ip(const byte_buffer& pkt) {
+    if (pkt.length() < 20) {
+        return "";
+    }
+
+    // IPv4: bytes 12-15 are source IP
+    auto it = pkt.begin();
+    std::advance(it, 12);
+    
+    uint8_t ip_bytes[4];
+    for (int i = 0; i < 4; ++i, ++it) {
+        if (it == pkt.end()) return "";
+        ip_bytes[i] = *it;
+    }
+    
+    char ip_str[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, ip_bytes, ip_str, INET_ADDRSTRLEN);
+    
+    return std::string(ip_str);
+}
+
+void plain_ip_adapter::handle_rx_packets() {
+   logger_.warning("entering handle_rx_packets loop");
+    
+    while (rx_loop_running_ && running_) {
+        byte_buffer pkt = receive_pdu();
+        if (pkt.empty()) {
+            std::this_thread::sleep_for(std::chrono::microseconds(100));
+            continue;
+        }
+        
+        if (pkt.length() < 20) {
+            logger_.warning("Received packet too short for IP header: {} bytes", pkt.length());
+            std::this_thread::sleep_for(std::chrono::microseconds(100));
+            continue;
+        }
+
+        // Extract destination IP and log packet details
+        std::string dest_ip = extract_dest_ip(pkt);
+        std::string src_ip = extract_src_ip(pkt);
+        logger_.warning("🔥 INCOMING packet: {} -> {} ({} bytes)", src_ip, dest_ip, pkt.length());
+        
+        log_all_notifiers();
+                // Find notifier for destination IP
+
+                // testing any dist ip to single existin rx notifier
+          auto it = rx_notifiers_.find(dest_ip);
+          if (it != rx_notifiers_.end()) {
+              logger_.warning("🔥 Found notifier for UE {}, forwarding packet", dest_ip);
+              ul_executor_.execute([notifier = it->second, pkt = std::move(pkt)]() mutable {
+                  notifier->on_new_ip_packet(std::move(pkt));
+              });
+          } else if (!rx_notifiers_.empty()) {
+              // Fallback: forward to the only notifier
+              auto fallback = rx_notifiers_.begin();
+              logger_.warning("🔥 No IP match, forwarding to the only registered UE notifier (IP: {})", fallback->first);
+              ul_executor_.execute([notifier = fallback->second, pkt = std::move(pkt)]() mutable {
+                  notifier->on_new_ip_packet(std::move(pkt));
+              });
+          } else {
+              logger_.warning("🔥 No notifiers registered, dropping packet");
+          }
+        /*
+        // Find notifier for destination IP
+        auto it = rx_notifiers_.find(dest_ip);
+        if (it != rx_notifiers_.end()) {
+            logger_.warning("🔥 Found notifier for UE {}, forwarding packet", dest_ip);
+            ul_executor_.execute([notifier = it->second, pkt = std::move(pkt)]() mutable {
+                notifier->on_new_ip_packet(std::move(pkt));
+            });
+        } else {
+            logger_.warning("🔥 No notifier found for destination IP: {}", dest_ip);
+        }
+        */
+        // Small delay to prevent busy waiting
+        std::this_thread::sleep_for(std::chrono::microseconds(100));
+    }
+    
+    logger_.warning("Exiting handle_rx_packets loop");
+}
+/*
 void plain_ip_adapter::handle_rx_packets() {
     
       logger_.warning("entering handle_rx_packets loop");
@@ -313,6 +394,7 @@ void plain_ip_adapter::handle_rx_packets() {
     std::this_thread::sleep_for(std::chrono::microseconds(100));
   }
 }
+*/
 
 void plain_ip_adapter::connect_rx_notifier(plain_ip_rx_data_notifier& notifier)
 {
@@ -396,6 +478,46 @@ bool plain_ip_adapter::configure_interface()
   return true;
 }
 
+bool plain_ip_adapter::setup_routing() {
+
+
+    // Configure the TUN interface with correct IP
+    std::string ip_cmd = fmt::format("ip addr add {}/{} dev {}", 
+                                    config_.interface_name, config_.netmask_, config_.interface_name);
+//    ret = system(ip_cmd.c_str());
+    
+    
+    // Bring interface up
+    std::string up_cmd = fmt::format("ip link set {} up", config_.interface_name);
+//    ret = system(up_cmd.c_str());
+     int ret = system(ip_cmd.c_str());
+    if (ret != 0) logger_.warning("Command failed: {}", up_cmd);
+    // Add route for UE subnet
+    std::string route_cmd = fmt::format("ip route add {}/{} dev {}", config_.subnet, config_.netmask_, config_.interface_name);
+    ret = system(route_cmd.c_str());
+    if (ret != 0) logger_.warning("Command failed: {}", route_cmd);
+    
+    // Enable forwarding
+    ret = system("sysctl -w net.ipv4.ip_forward=1");
+    if (ret != 0) logger_.warning("Command failed:  sysctl -w net.ipv4.ip_forward=1");
+    
+    // Set up NAT for outgoing traffic
+    std::string nat_cmd = fmt::format("iptables -t nat -A POSTROUTING -s {}/{} -o {} -j MASQUERADE",
+                                       config_.subnet, config_.netmask_, config_.dev_name);
+    ret = system(nat_cmd.c_str());
+    if (ret != 0) logger_.warning("Command failed: {}", nat_cmd);
+    
+    // Forward rules
+    ret = system(fmt::format("iptables -A FORWARD -i {} -o {} -j ACCEPT", config_.interface_name, config_.dev_name).c_str());
+    if (ret != 0) logger_.warning("Command failed: {}", fmt::format("iptables -A FORWARD -i {} -o {} -j ACCEPT", config_.interface_name, config_.dev_name));
+    ret = system(fmt::format("iptables -A FORWARD -i {} -o {} -m state --state RELATED,ESTABLISHED -j ACCEPT", config_.dev_name, config_.interface_name).c_str());
+    if (ret != 0) logger_.warning("Command failed: {}", fmt::format("iptables -A FORWARD -i {} -o {} -m state --state RELATED,ESTABLISHED -j ACCEPT", config_.dev_name, config_.interface_name));
+
+    logger_.info("Plain IP routing configured for {}/{}", config_.subnet, config_.netmask_);
+
+    return true;
+}
+/*
 bool plain_ip_adapter::setup_routing()
 {
   // This is a simplified routing setup
@@ -412,3 +534,4 @@ bool plain_ip_adapter::setup_routing()
     return false;
   }
 }
+*/
