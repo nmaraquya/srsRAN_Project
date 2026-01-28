@@ -65,17 +65,27 @@ bool plain_ip_adapter::init()
     return false;
   }
 
-  // Configure network interface
+  // Configure network interface (IPv4)
   if (!configure_interface()) {
-    logger_.error("Failed to configure network interface");
+    logger_.error("Failed to configure network interface (IPv4)");
     close(fd_);
     fd_ = -1;
     return false;
   }
 
+  // Configure IPv6 if enabled
+  if (config_.enable_ipv6 && !configure_interface_ipv6()) {
+    logger_.warning("Failed to configure IPv6 interface, continuing with IPv4 only");
+  }
+
   // Setup routing if enabled
   if (config_.enable_routing && !setup_routing()) {
     logger_.warning("Failed to setup routing, continuing without routing");
+  }
+
+  // Setup IPv6 routing if enabled
+  if (config_.enable_ipv6 && config_.enable_routing && !setup_routing_ipv6()) {
+    logger_.warning("Failed to setup IPv6 routing, continuing without IPv6 routing");
   }
 
   running_ = true;
@@ -187,7 +197,7 @@ void plain_ip_adapter::unregister_rx_notifier(const std::string& ue_ip) {
 
 std::string plain_ip_adapter::extract_dest_ip(const byte_buffer& pkt) {
       if (pkt.length() < 20) {
-        logger_.warning("⚠️ Packet too short for IP header: {} bytes", pkt.length());
+        logger_.warning("   Packet too short for IP header: {} bytes", pkt.length());
         return "";
     }
 
@@ -203,7 +213,7 @@ std::string plain_ip_adapter::extract_dest_ip(const byte_buffer& pkt) {
     }
     
     if (copied < 20) {
-        logger_.warning("⚠️ Could not read full IP header");
+        logger_.warning("   Could not read full IP header");
         return "";
     }
     
@@ -212,50 +222,11 @@ std::string plain_ip_adapter::extract_dest_ip(const byte_buffer& pkt) {
     inet_ntop(AF_INET, ip_bytes, ip_str, INET_ADDRSTRLEN);
     
     std::string dest_ip(ip_str);
-    logger_.info("🔍 EXTRACTED destination IP: '{}'", dest_ip);
+    logger_.info("   EXTRACTED destination IP: '{}'", dest_ip);
     
     return dest_ip;
 }
 
-/*
-std::string plain_ip_adapter::extract_dest_ip(const byte_buffer& pkt) {
-    if (pkt.length() < 20) {
-        logger_.warning("⚠️ Packet too short for IP header: {} bytes", pkt.length());
-         return "";
-    }
-
-        // Get destination IP from IP header (bytes 16-19)
-    auto slice = pkt.slice(16, 4);
-    std::array<uint8_t, 4> ip_bytes_;
-    std::copy(slice.begin(), slice.end(), ip_bytes_.begin());
-    
-    std::string dest_ip = fmt::format("{}.{}.{}.{}", 
-                                     ip_bytes_[0], ip_bytes_[1], 
-                                     ip_bytes_[2], ip_bytes_[3]);
-    
-    logger_.info("🔍 EXTRACTED destination IP: '{}' (length: {})", dest_ip, dest_ip.length());
-    
-    // Log hex dump
-    std::string hex_dump;
-    for (char c : dest_ip) {
-        hex_dump += fmt::format("{:02x} ", static_cast<unsigned char>(c));
-    }
-    logger_.info("🔍 Extracted IP hex: {}", hex_dump);
-    
-
-    // IPv4: bytes 16-19 are destination IP
-    uint8_t ip_bytes[4];
-    auto it = pkt.begin();
-    std::advance(it, 16);
-    for (int i = 0; i < 4; ++i, ++it) {
-        if (it == pkt.end()) return "";
-        ip_bytes[i] = *it;
-    }
-    char ip_str[INET_ADDRSTRLEN];
-    inet_ntop(AF_INET, ip_bytes, ip_str, INET_ADDRSTRLEN);
-    return std::string(ip_str);
-}
-*/
 void plain_ip_adapter::log_all_notifiers() const {
 
     logger_.info("📋 Current notifiers map (size: {}):", rx_notifiers_.size());
@@ -320,9 +291,22 @@ void plain_ip_adapter::handle_rx_packets() {
         }
 
         // Extract destination IP and log packet details
-        std::string dest_ip = extract_dest_ip(pkt);
-        std::string src_ip = extract_src_ip(pkt);
-        logger_.warning("🔥 INCOMING packet: {} -> {} ({} bytes)", src_ip, dest_ip, pkt.length());
+        uint8_t ip_version = get_ip_version(pkt);
+        std::string dest_ip;
+        std::string src_ip;
+        
+        if (ip_version == 4) {
+          dest_ip = extract_dest_ip(pkt);
+          src_ip = extract_src_ip(pkt);
+          logger_.warning("  INCOMING IPv4 packet: {} -> {} ({} bytes)", src_ip, dest_ip, pkt.length());
+        } else if (ip_version == 6) {
+          dest_ip = extract_dest_ipv6(pkt);
+          src_ip = extract_src_ipv6(pkt);
+          logger_.warning("  INCOMING IPv6 packet: {} -> {} ({} bytes)", src_ip, dest_ip, pkt.length());
+        } else {
+          logger_.warning("  Unknown IP version: {}", ip_version);
+          continue;
+        }
         
         log_all_notifiers();
                 // Find notifier for destination IP
@@ -330,72 +314,25 @@ void plain_ip_adapter::handle_rx_packets() {
                 // testing any dist ip to single existin rx notifier
           auto it = rx_notifiers_.find(dest_ip);
           if (it != rx_notifiers_.end()) {
-              logger_.warning("🔥 Found notifier for UE {}, forwarding packet", dest_ip);
+              logger_.warning("  Found notifier for UE {}, forwarding packet", dest_ip);
               ul_executor_.execute([notifier = it->second, pkt = std::move(pkt)]() mutable {
                   notifier->on_new_ip_packet(std::move(pkt));
               });
           } else if (!rx_notifiers_.empty()) {
               // Fallback: forward to the only notifier
               auto fallback = rx_notifiers_.begin();
-              logger_.warning("🔥 No IP match, forwarding to the only registered UE notifier (IP: {})", fallback->first);
+              logger_.warning("  No IP match, forwarding to the only registered UE notifier (IP: {})", fallback->first);
               ul_executor_.execute([notifier = fallback->second, pkt = std::move(pkt)]() mutable {
                   notifier->on_new_ip_packet(std::move(pkt));
               });
           } else {
-              logger_.warning("🔥 No notifiers registered, dropping packet");
+              logger_.warning("  No notifiers registered, dropping packet");
           }
-        /*
-        // Find notifier for destination IP
-        auto it = rx_notifiers_.find(dest_ip);
-        if (it != rx_notifiers_.end()) {
-            logger_.warning("🔥 Found notifier for UE {}, forwarding packet", dest_ip);
-            ul_executor_.execute([notifier = it->second, pkt = std::move(pkt)]() mutable {
-                notifier->on_new_ip_packet(std::move(pkt));
-            });
-        } else {
-            logger_.warning("🔥 No notifier found for destination IP: {}", dest_ip);
-        }
-        */
-        // Small delay to prevent busy waiting
-//        std::this_thread::sleep_for(std::chrono::microseconds(100));
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
    }
     
     logger_.warning("Exiting handle_rx_packets loop");
 }
-/*
-void plain_ip_adapter::handle_rx_packets() {
-    
-      logger_.warning("entering handle_rx_packets loop");
-  while (rx_loop_running_ && running_) {
-    byte_buffer pkt = receive_pdu();
-    if (pkt.empty()) {
-      std::this_thread::sleep_for(std::chrono::microseconds(100));
-      continue;
-    }
-    if (pkt.length() < 20) {
-      logger_.warning("Received packet too short for IP header: {} bytes", pkt.length());
-      std::this_thread::sleep_for(std::chrono::microseconds(100));
-      continue;
-    }
-
-    
-    std::string dest_ip = extract_dest_ip(pkt);
-    logger_.warning("handle_rx_packets.....", dest_ip);
-    log_all_notifiers();
-    auto it = rx_notifiers_.find(dest_ip);
-    if (it != rx_notifiers_.end()) {
-            ul_executor_.execute([notifier = it->second, pkt = std::move(pkt)]() mutable {
-        notifier->on_new_ip_packet(std::move(pkt));
-    });
-    } else {
-        logger_.warning("No notifier for IP {}", dest_ip);
-    }
-    // Small delay to prevent busy waiting
-    std::this_thread::sleep_for(std::chrono::microseconds(100));
-  }
-}
-*/
 
 void plain_ip_adapter::connect_rx_notifier(plain_ip_rx_data_notifier& notifier)
 {
@@ -478,48 +415,41 @@ bool plain_ip_adapter::configure_interface()
                config_.interface_name, config_.ip_address, config_.netmask);
   return true;
 }
-/*
-bool plain_ip_adapter::setup_routing() {
 
+bool plain_ip_adapter::configure_interface_ipv6()
+{
+  // Create socket for IPv6 interface configuration
+  int sock = socket(AF_INET6, SOCK_DGRAM, 0);
+  if (sock < 0) {
+    logger_.error("Failed to create socket for IPv6 interface configuration: {}", strerror(errno));
+    return false;
+  }
 
-    // Configure the TUN interface with correct IP
-    std::string ip_cmd = fmt::format("ip addr add {}/{} dev {}", 
-                                    config_.interface_name, config_.netmask_, config_.interface_name);
-//    ret = system(ip_cmd.c_str());
-    
-    
-    // Bring interface up
-    std::string up_cmd = fmt::format("ip link set {} up", config_.interface_name);
-//    ret = system(up_cmd.c_str());
-     int ret = system(ip_cmd.c_str());
-    if (ret != 0) logger_.warning("Command failed: {}", up_cmd);
-    // Add route for UE subnet
-    std::string route_cmd = fmt::format("ip route add {}/{} dev {}", config_.subnet, config_.netmask_, config_.interface_name);
-    ret = system(route_cmd.c_str());
-    if (ret != 0) logger_.warning("Command failed: {}", route_cmd);
-    
-    // Enable forwarding
-    ret = system("sysctl -w net.ipv4.ip_forward=1");
-    if (ret != 0) logger_.warning("Command failed:  sysctl -w net.ipv4.ip_forward=1");
-    
-    // Set up NAT for outgoing traffic
-    std::string nat_cmd = fmt::format("iptables -t nat -A POSTROUTING -s {}/{} -o {} -j MASQUERADE",
-                                       config_.subnet, config_.netmask_, config_.dev_name);
-    ret = system(nat_cmd.c_str());
-    if (ret != 0) logger_.warning("Command failed: {}", nat_cmd);
-    
-    // Forward rules
-    ret = system(fmt::format("iptables -A FORWARD -i {} -o {} -j ACCEPT", config_.interface_name, config_.dev_name).c_str());
-    if (ret != 0) logger_.warning("Command failed: {}", fmt::format("iptables -A FORWARD -i {} -o {} -j ACCEPT", config_.interface_name, config_.dev_name));
-    ret = system(fmt::format("iptables -A FORWARD -i {} -o {} -m state --state RELATED,ESTABLISHED -j ACCEPT", config_.dev_name, config_.interface_name).c_str());
-    if (ret != 0) logger_.warning("Command failed: {}", fmt::format("iptables -A FORWARD -i {} -o {} -m state --state RELATED,ESTABLISHED -j ACCEPT", config_.dev_name, config_.interface_name));
+  struct ifreq ifr;
+  memset(&ifr, 0, sizeof(ifr));
+  strncpy(ifr.ifr_name, config_.interface_name.c_str(), IFNAMSIZ - 1);
 
-    logger_.info("Plain IP routing configured for {}/{}", config_.subnet, config_.netmask_);
+  // For IPv6, we need to use different approach with netlink or ip command
+  // Using system command for simplicity
+  close(sock);
 
-    return true;
+  // Add IPv6 address using system command
+  std::string ipv6_cmd = fmt::format("ip -6 addr add {}/{} dev {}",
+                                     config_.ipv6_address,
+                                     config_.ipv6_prefix,
+                                     config_.interface_name);
+  int result = system(ipv6_cmd.c_str());
+  
+  if (result != 0) {
+    logger_.error("Failed to set IPv6 address: {}", ipv6_cmd);
+    return false;
+  }
+
+  logger_.info("Interface {} configured with IPv6 {} prefix {}",
+               config_.interface_name, config_.ipv6_address, config_.ipv6_prefix);
+  return true;
 }
-*/
-
+// TODO routing setup
 bool plain_ip_adapter::setup_routing()
 {
   // This is a simplified routing setup
@@ -533,6 +463,92 @@ bool plain_ip_adapter::setup_routing()
     return true;
   } else {
     logger_.warning("Failed to setup routing for interface {}", config_.interface_name);
+    return false;
+  }
+}
+
+uint8_t plain_ip_adapter::get_ip_version(const byte_buffer& pkt)
+{
+  if (pkt.empty()) {
+    return 0;
+  }
+  
+  // IP version is in the first 4 bits of the first byte
+  uint8_t first_byte = *pkt.begin();
+  return (first_byte >> 4) & 0x0F;
+}
+
+std::string plain_ip_adapter::extract_dest_ipv6(const byte_buffer& pkt)
+{
+  if (pkt.length() < 40) {  // IPv6 header is 40 bytes minimum
+    logger_.warning("   Packet too short for IPv6 header: {} bytes", pkt.length());
+    return "";
+  }
+
+  // IPv6 destination address is at bytes 24-39 (16 bytes)
+  uint8_t ip_bytes[16];
+  size_t copied = 0;
+  
+  for (auto it = pkt.begin(); it != pkt.end() && copied < 40; ++it, ++copied) {
+    if (copied >= 24 && copied < 40) {
+      ip_bytes[copied - 24] = *it;
+    }
+  }
+  
+  if (copied < 40) {
+    logger_.warning("   Could not read full IPv6 header");
+    return "";
+  }
+  
+  // Convert to string
+  char ip_str[INET6_ADDRSTRLEN];
+  inet_ntop(AF_INET6, ip_bytes, ip_str, INET6_ADDRSTRLEN);
+  
+  std::string dest_ip(ip_str);
+  logger_.info("   EXTRACTED IPv6 destination IP: '{}'", dest_ip);
+  
+  return dest_ip;
+}
+
+// TODO ipv6 segmentation handling
+std::string plain_ip_adapter::extract_src_ipv6(const byte_buffer& pkt)
+{
+  if (pkt.length() < 40) {  // IPv6 header is 40 bytes minimum
+    return "";
+  }
+
+  // IPv6 source address is at bytes 8-23 (16 bytes)
+  uint8_t ip_bytes[16];
+  auto it = pkt.begin();
+  std::advance(it, 8);
+  
+  for (int i = 0; i < 16; ++i, ++it) {
+    if (it == pkt.end()) return "";
+    ip_bytes[i] = *it;
+  }
+  
+  char ip_str[INET6_ADDRSTRLEN];
+  inet_ntop(AF_INET6, ip_bytes, ip_str, INET6_ADDRSTRLEN);
+  
+  return std::string(ip_str);
+}
+
+bool plain_ip_adapter::setup_routing_ipv6()
+{
+  logger_.info("IPv6 routing setup started for interface {}", config_.interface_name);
+  
+  // Add IPv6 route for the subnet
+  std::string route_cmd = fmt::format("ip -6 route add {}/{} dev {}",
+                                      config_.ipv6_subnet,
+                                      config_.ipv6_prefix,
+                                      config_.interface_name);
+  int result = system(route_cmd.c_str());
+
+  if (result == 0) {
+    logger_.info("IPv6 routing setup completed for interface {}", config_.interface_name);
+    return true;
+  } else {
+    logger_.warning("Failed to setup IPv6 routing for interface {}", config_.interface_name);
     return false;
   }
 }

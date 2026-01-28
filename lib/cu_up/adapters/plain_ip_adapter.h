@@ -23,6 +23,11 @@ struct plain_ip_config {
   std::string subnet         = "192.168.100.0";
   std::string netmask        = "255.255.255.0";
   std::string netmask_       = "24";
+  // IPv6 configuration
+  std::string ipv6_address   = "fd00::1";
+  std::string ipv6_subnet    = "fd00::";
+  std::string ipv6_prefix    = "64";
+  bool        enable_ipv6    = true;
   bool        enable_routing = true;
 };
 
@@ -69,7 +74,9 @@ public:
 private:
   void handle_rx_packets();
   bool configure_interface();
+  bool configure_interface_ipv6();
   bool setup_routing();
+  bool setup_routing_ipv6();
   plain_ip_sdap_ul_adapter* ul_handler_ = nullptr;
 
   plain_ip_config config_;
@@ -81,6 +88,9 @@ private:
   plain_ip_rx_data_notifier* rx_notifier_ = nullptr;
   std::string extract_dest_ip(const byte_buffer& pkt);
   std::string extract_src_ip(const byte_buffer& pkt);
+  std::string extract_dest_ipv6(const byte_buffer& pkt);
+  std::string extract_src_ipv6(const byte_buffer& pkt);
+  uint8_t get_ip_version(const byte_buffer& pkt);
   srslog::basic_logger& logger_;
 };
 
